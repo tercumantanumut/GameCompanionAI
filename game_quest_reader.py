@@ -9,6 +9,8 @@ import os
 import openai
 import google.generativeai as genai
 from dotenv import load_dotenv
+import requests
+import json
 import tkinter as tk
 from tkinter import messagebox, simpledialog, Text, Button, Scrollbar
 import ctypes
@@ -90,6 +92,8 @@ class GameAnalyzer:
             self.gemini_detector = GeminiDetector()
         elif ai_model == "openai":
             self.openai_client = openai.OpenAI(api_key=os.getenv('OPENAI_API_KEY'), base_url=os.getenv('OPENAI_API_BASE', 'https://api.openai.com/v1'))
+        elif ai_model == "ollama":
+            self.ollama_url = "http://localhost:11434/api/generate"
         self.system_prompt = "You are an advanced AI game companion, analyzing screenshots and providing insights. Keep your answers concise, maximum 3 sentences. Provide only viable information. Disregard any chat logs or text conversations visible in the game screenshot. Always consider the conversation history when providing analysis."
 
     def summarize_conversation(self):
@@ -213,6 +217,34 @@ class GameAnalyzer:
                 return "Whoops! My AI brain just did a backflip. Give me a sec to recover!"
         elif self.ai_model == "gemini":
             return self.gemini_detector.analyze_with_vision(self.tensor_to_image(image), custom_prompt, self.conversation_history)
+        elif self.ai_model == "ollama":
+            try:
+                # Convert the image to base64
+                buffered = BytesIO()
+                image.save(buffered, format="PNG")
+                img_str = b64encode(buffered.getvalue()).decode('utf-8')
+
+                history = self.conversation_history.get_formatted_history()
+                default_prompt = "You're a witty, sarcastic game companion. Analyze this screenshot and give a funny, personal take on what's happening. Keep it short, sweet, and hilarious. No AI jargon allowed!"
+                prompt = custom_prompt if custom_prompt else default_prompt
+
+                payload = {
+                    "model": "llava",
+                    "prompt": f"{self.system_prompt}\n\nConversation history:\n{json.dumps(history)}\n\nUser: {prompt}\n\nAssistant:",
+                    "images": [img_str]
+                }
+
+                response = requests.post(self.ollama_url, json=payload)
+                response.raise_for_status()
+                analysis = response.json()['response']
+
+                self.conversation_history.add("user", prompt)
+                self.conversation_history.add("assistant", analysis)
+
+                return analysis
+            except Exception as e:
+                print(f"Error during Ollama Vision analysis: {str(e)}")
+                return "Oops! My Ollama-powered brain hit a snag. Let me reboot and try again!"
         else:
             return "Uh-oh, looks like someone tried to summon an AI that doesn't exist. Nice try, though!"
 
@@ -512,6 +544,26 @@ def analyze_text_with_ai(text, ai_model, conversation_history):
         except Exception as e:
             print(f"Error during Gemini analysis: {str(e)}")
             return "Unable to analyze text due to an error."
+    elif ai_model == "ollama":
+        try:
+            history = conversation_history.get_formatted_history()
+            prompt = f"You are an advanced AI game companion. Consider our conversation history. Analyze the following in-game text and provide a concise, insightful interpretation, including any relevant strategic advice or lore connections: {text}"
+            
+            payload = {
+                "model": "llama2",
+                "prompt": f"Conversation history:\n{json.dumps(history)}\n\nUser: {prompt}\n\nAssistant:",
+            }
+
+            response = requests.post("http://localhost:11434/api/generate", json=payload)
+            response.raise_for_status()
+            analysis = response.json()['response']
+
+            conversation_history.add("user", f"Analyze: {text}")
+            conversation_history.add("assistant", analysis)
+            return analysis
+        except Exception as e:
+            print(f"Error during Ollama analysis: {str(e)}")
+            return "Unable to analyze text due to an error with Ollama."
     else:
         return "Invalid AI model selected."
 
@@ -587,13 +639,15 @@ def main():
     
     mode_root = tk.Tk()
     mode_root.withdraw()  # Hide the main window
-    ai_model = simpledialog.askstring("AI Model Selection", "Choose AI model:\n1. OpenAI\n2. Gemini", initialvalue="1")
+    ai_model = simpledialog.askstring("AI Model Selection", "Choose AI model:\n1. OpenAI\n2. Gemini\n3. Ollama", initialvalue="1")
     mode_root.destroy()
 
     if ai_model == "1":
         ai_model = "openai"
     elif ai_model == "2":
         ai_model = "gemini"
+    elif ai_model == "3":
+        ai_model = "ollama"
     else:
         print("Invalid AI model selected. Exiting.")
         return
