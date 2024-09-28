@@ -90,6 +90,7 @@ class GameAnalyzer:
             self.gemini_detector = GeminiDetector()
         elif ai_model == "openai":
             self.openai_client = openai.OpenAI(api_key=os.getenv('OPENAI_API_KEY'), base_url=os.getenv('OPENAI_API_BASE', 'https://api.openai.com/v1'))
+        self.system_prompt = "You are an advanced AI game companion, analyzing screenshots and providing insights. Keep your answers concise, maximum 3 sentences. Provide only viable information. Disregard any chat logs or text conversations visible in the game screenshot."
 
     def capture_full_screen(self):
         return pyautogui.screenshot()
@@ -165,7 +166,7 @@ class GameAnalyzer:
                 prompt = custom_prompt if custom_prompt else default_prompt
 
                 messages = [
-                    {"role": "system", "content": "You are a game companion analyzing screenshots. Keep your answers to a maximum of 3 sentences. Provide only viable information. Disregard any chat logs or text conversations visible in the game screenshot."},
+                    {"role": "system", "content": self.system_prompt},
                     *history,
                     {
                         "role": "user",
@@ -511,6 +512,13 @@ def start_game_analysis(analyzer, area=None):
                 speaking = True
                 speak_text(analysis)
                 speaking = False
+
+            # Allow for follow-up questions
+            user_input = input("Ask a follow-up question (or press Enter to continue): ").strip()
+            if user_input:
+                follow_up_analysis = analyzer.analyze_text_with_ai(user_input, analyzer.ai_model, analyzer.conversation_history)
+                print(f"Follow-up analysis: {follow_up_analysis}")
+                speak_text(follow_up_analysis)
 
             time.sleep(0.5)  # Reduced interval for more responsive detection
     except KeyboardInterrupt:
