@@ -371,18 +371,20 @@ def get_voice_input():
     recognizer = sr.Recognizer()
     with sr.Microphone() as source:
         print("Listening for voice input...")
-        audio = recognizer.listen(source)
-    
-    try:
-        text = recognizer.recognize_google(audio)
-        print(f"You said: {text}")
-        return text
-    except sr.UnknownValueError:
-        print("Sorry, I couldn't understand that.")
-        return None
-    except sr.RequestError as e:
-        print(f"Could not request results from Google Speech Recognition service; {e}")
-        return None
+        try:
+            audio = recognizer.listen(source, timeout=5)
+            text = recognizer.recognize_google(audio)
+            print(f"You said: {text}")
+            return text
+        except sr.WaitTimeoutError:
+            print("No speech detected within the timeout period.")
+            return None
+        except sr.UnknownValueError:
+            print("Sorry, I couldn't understand that.")
+            return None
+        except sr.RequestError as e:
+            print(f"Could not request results from Google Speech Recognition service; {e}")
+            return None
 
 def analyze_text_with_ai(text, ai_model, conversation_history):
     if ai_model == "openai":
@@ -454,18 +456,10 @@ def start_game_analysis(analyzer, area=None):
 
             print(feedback)  # Always print feedback for better user awareness
 
-            # Check for voice input
-            voice_input = get_voice_input()
-
-            if (change_detected or voice_input) and not speaking:
+            if change_detected and not speaking:
                 print("Analyzing...")
                 focus_image = current_screenshot.crop(focus_area) if focus_area else current_screenshot
-                
-                if voice_input:
-                    combined_prompt = f"Analyze this game screenshot, considering our conversation history. Additionally, respond to the following player input: {voice_input}"
-                    analysis = analyzer.analyze_with_vision(focus_image, combined_prompt)
-                else:
-                    analysis = analyzer.analyze_with_vision(focus_image)
+                analysis = analyzer.analyze_with_vision(focus_image)
                 
                 print(f"Analysis: {analysis}")
                 speaking = True
@@ -559,6 +553,8 @@ def main():
             analysis = analyzer.analyze_with_vision(screenshot, combined_prompt)
             print(f"AI Analysis: {analysis}")
             speak_text(analysis)
+        else:
+            print("No voice input detected or recognized.")
 
     keyboard.add_hotkey('ctrl+5', on_ctrl_5)
     keyboard.add_hotkey('ctrl+v', on_ctrl_v)
