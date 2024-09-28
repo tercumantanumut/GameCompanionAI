@@ -19,6 +19,7 @@ import json
 import torch
 from collections import deque
 from skimage.metrics import structural_similarity as ssim
+import speech_recognition as sr
 
 class AreaSelector:
     def __init__(self, master):
@@ -202,7 +203,7 @@ class GameAnalyzer:
                 messages = [
                     {"role": "system", "content": "You are an advanced AI game companion, trained in analyzing and interpreting complex game scenarios, quests, and narratives. Your role is to provide players with insightful, concise, and contextually relevant information to enhance their gaming experience. Utilize your deep understanding of game mechanics, storytelling techniques, and player psychology to offer strategic advice, lore explanations, and quest interpretations. Always maintain a professional tone while being engaging and supportive."},
                     *history,
-                    {"role": "user", "content": f"Analyze the following in-game text and provide a concise, insightful interpretation, including any relevant strategic advice or lore connections: {text}"}
+                    {"role": "user", "content": f"Analyze the following in-game text or player's voice input and provide a concise, insightful interpretation, including any relevant strategic advice or lore connections: {text}"}
                 ]
                 response = self.openai_client.chat.completions.create(
                     model="gpt-4-0613",  # Use the appropriate model name
@@ -513,11 +514,20 @@ def main():
         print(f"Selected area: {selected_area}")
         start_game_analysis(analyzer, selected_area)
 
+    def on_ctrl_v():
+        print("Ctrl+V pressed. Listening for voice input...")
+        voice_input = get_voice_input()
+        if voice_input:
+            analysis = analyzer.analyze_text_with_ai(voice_input, ai_model, conversation_history)
+            print(f"AI Analysis: {analysis}")
+            speak_text(analysis)
+
     keyboard.add_hotkey('ctrl+5', on_ctrl_5)
+    keyboard.add_hotkey('ctrl+v', on_ctrl_v)
 
     mode_root = tk.Tk()
     mode_root.withdraw()  # Hide the main window
-    mode = simpledialog.askstring("Mode Selection", "Choose mode:\n1. Area Selection (Tesseract)\n2. Area Selection (AI)\n3. Game Analysis\n4. Wait for Ctrl+5\n5. Player in the Loop (with TTS) - Limited functionality with Gemini, might not work as expected", initialvalue="1")
+    mode = simpledialog.askstring("Mode Selection", "Choose mode:\n1. Area Selection (Tesseract)\n2. Area Selection (AI)\n3. Game Analysis\n4. Wait for Ctrl+5\n5. Player in the Loop (with TTS) - Limited functionality with Gemini, might not work as expected\n6. Voice Input (Ctrl+V)", initialvalue="1")
     mode_root.destroy()
 
     selected_area = None
