@@ -124,7 +124,8 @@ class GameAnalyzer:
                     return True, None, f"Overall change detected. Change percentage: {change_percentage:.2%}"
         else:
             self.consecutive_changes = 0
-            return False, None, f"No significant change. Change percentage: {change_percentage:.2%}"
+
+        return False, None, f"No significant change. Change percentage: {change_percentage:.2%}"
 
     def tensor_to_image(self, image):
         if isinstance(image, torch.Tensor):
