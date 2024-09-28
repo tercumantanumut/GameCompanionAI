@@ -80,7 +80,7 @@ class GameAnalyzer:
         self.focus_area = None
         self.ai_model = ai_model
         self.conversation_history = ConversationHistory()
-        self.change_threshold = 0.1  # Adjust this value to fine-tune sensitivity
+        self.change_threshold = 0.5  # Adjust this value to fine-tune sensitivity
         self.consecutive_changes = 0
         self.max_consecutive_changes = 3  # Number of consecutive changes before triggering analysis
         if ai_model == "gemini":
