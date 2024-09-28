@@ -420,13 +420,16 @@ def player_in_the_loop(analyzer):
     root = tk.Tk()
     root.title("Player in the Loop")
 
-    text_input = Text(root, height=3, width=50)
-    text_input.pack(pady=10)
+    frame = tk.Frame(root)
+    frame.pack(fill=tk.BOTH, expand=True)
 
-    output_text = Text(root, height=20, width=50)
-    output_text.pack(pady=10)
+    text_input = Text(frame, height=3, width=50)
+    text_input.pack(pady=10, fill=tk.X, expand=True)
+
+    output_text = Text(frame, height=20, width=50, wrap=tk.WORD)
+    output_text.pack(pady=10, fill=tk.BOTH, expand=True)
     
-    scrollbar = Scrollbar(root, command=output_text.yview)
+    scrollbar = Scrollbar(frame, command=output_text.yview)
     scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
     output_text.config(yscrollcommand=scrollbar.set)
 
@@ -438,8 +441,9 @@ def player_in_the_loop(analyzer):
             output_text.insert(tk.END, f"AI: {analysis}\n\n")
             output_text.see(tk.END)
             text_input.delete("1.0", tk.END)
+            speak_text(analysis)  # Automatically read the AI response
 
-    submit_button = Button(root, text="Submit", command=on_submit)
+    submit_button = Button(frame, text="Submit", command=on_submit)
     submit_button.pack(pady=10)
 
     def analyze_screen():
@@ -447,6 +451,7 @@ def player_in_the_loop(analyzer):
         analysis = analyzer.analyze_with_vision(screenshot)
         output_text.insert(tk.END, f"Screen Analysis: {analysis}\n\n")
         output_text.see(tk.END)
+        speak_text(analysis)  # Automatically read the screen analysis
         root.after(10000, analyze_screen)  # Analyze screen every 10 seconds
 
     analyze_screen()
@@ -489,7 +494,7 @@ def main():
 
     mode_root = tk.Tk()
     mode_root.withdraw()  # Hide the main window
-    mode = simpledialog.askstring("Mode Selection", "Choose mode:\n1. Area Selection (Tesseract)\n2. Area Selection (AI)\n3. Game Analysis\n4. Wait for Ctrl+5\n5. Player in the Loop", initialvalue="1")
+    mode = simpledialog.askstring("Mode Selection", "Choose mode:\n1. Area Selection (Tesseract)\n2. Area Selection (AI)\n3. Game Analysis\n4. Wait for Ctrl+5\n5. Player in the Loop (with TTS)", initialvalue="1")
     mode_root.destroy()
 
     selected_area = None
@@ -544,6 +549,7 @@ def main():
             print("\nGame Quest Reader stopped.")
 
     elif mode == "5":
+        print("Starting Player in the Loop mode with automatic TTS...")
         player_in_the_loop(analyzer)
 
     else:
