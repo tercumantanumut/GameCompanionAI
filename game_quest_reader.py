@@ -92,6 +92,21 @@ class GameAnalyzer:
             self.openai_client = openai.OpenAI(api_key=os.getenv('OPENAI_API_KEY'), base_url=os.getenv('OPENAI_API_BASE', 'https://api.openai.com/v1'))
         self.system_prompt = "You are an advanced AI game companion, analyzing screenshots and providing insights. Keep your answers concise, maximum 3 sentences. Provide only viable information. Disregard any chat logs or text conversations visible in the game screenshot."
 
+    def summarize_conversation(self):
+        summary_prompt = "Summarize the key points of our conversation so far in 2-3 sentences. Focus on the most important game-related information and insights."
+        messages = [
+            {"role": "system", "content": self.system_prompt},
+            *self.conversation_history.get_formatted_history(),
+            {"role": "user", "content": summary_prompt}
+        ]
+        
+        response = self.openai_client.chat.completions.create(
+            model="gpt-4",
+            messages=messages,
+            max_tokens=100,
+        )
+        return response.choices[0].message.content
+
     def capture_full_screen(self):
         return pyautogui.screenshot()
 
@@ -185,6 +200,13 @@ class GameAnalyzer:
                 analysis = response.choices[0].message.content
                 self.conversation_history.add("user", prompt)
                 self.conversation_history.add("assistant", analysis)
+                
+                # If the conversation history is getting too long, summarize it
+                if len(self.conversation_history.history) >= 45:
+                    summary = self.summarize_conversation()
+                    self.conversation_history.clear()
+                    self.conversation_history.add("system", f"Previous conversation summary: {summary}")
+                
                 return "Based on our conversation history and the current screenshot: " + analysis
             except Exception as e:
                 print(f"Error during OpenAI Vision analysis: {str(e)}")
@@ -247,7 +269,7 @@ class GameAnalyzer:
             return "Invalid AI model selected."
 
 class ConversationHistory:
-    def __init__(self, max_length=10):
+    def __init__(self, max_length=50):
         self.history = deque(maxlen=max_length)
 
     def add(self, role, content):
@@ -255,6 +277,9 @@ class ConversationHistory:
 
     def get_formatted_history(self):
         return list(self.history)
+
+    def clear(self):
+        self.history.clear()
 
 class GeminiDetector:
     def __init__(self):
