@@ -513,13 +513,6 @@ def start_game_analysis(analyzer, area=None):
                 speak_text(analysis)
                 speaking = False
 
-            # Allow for follow-up questions
-            user_input = input("Ask a follow-up question (or press Enter to continue): ").strip()
-            if user_input:
-                follow_up_analysis = analyzer.analyze_text_with_ai(user_input, analyzer.ai_model, analyzer.conversation_history)
-                print(f"Follow-up analysis: {follow_up_analysis}")
-                speak_text(follow_up_analysis)
-
             time.sleep(0.5)  # Reduced interval for more responsive detection
     except KeyboardInterrupt:
         print("\nGame Analysis stopped.")
