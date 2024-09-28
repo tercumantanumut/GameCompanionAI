@@ -362,7 +362,10 @@ def extract_text(image):
 def speak_text(text):
     engine = pyttsx3.init()
     engine.say(text)
-    engine.runAndWait()
+    try:
+        engine.runAndWait()
+    except RuntimeError:
+        print("TTS Engine is busy. Skipping speech.")
 
 def get_voice_input():
     recognizer = sr.Recognizer()
@@ -441,6 +444,7 @@ def analyze_text_with_ai(text, ai_model, conversation_history):
 
 def start_game_analysis(analyzer, area=None):
     print("Game Analysis mode started. Press Ctrl+C to exit.")
+    speaking = False
     try:
         while True:
             current_screenshot = analyzer.capture_full_screen()
@@ -450,12 +454,14 @@ def start_game_analysis(analyzer, area=None):
 
             print(feedback)  # Always print feedback for better user awareness
 
-            if change_detected:
+            if change_detected and not speaking:
                 print("Analyzing...")
                 focus_image = current_screenshot.crop(focus_area) if focus_area else current_screenshot
                 analysis = analyzer.analyze_with_vision(focus_image)
                 print(f"Analysis: {analysis}")
+                speaking = True
                 speak_text(analysis)
+                speaking = False
 
             time.sleep(0.5)  # Reduced interval for more responsive detection
     except KeyboardInterrupt:
