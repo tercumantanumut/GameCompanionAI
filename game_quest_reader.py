@@ -81,9 +81,9 @@ class GameAnalyzer:
         self.focus_area = None
         self.ai_model = ai_model
         self.conversation_history = ConversationHistory()
-        self.change_threshold = 0.5  # Increased threshold to reduce sensitivity
+        self.change_threshold = 0.6  # Increased threshold to reduce sensitivity
         self.consecutive_changes = 0
-        self.max_consecutive_changes = 5  # Increased to require more consecutive changes
+        self.max_consecutive_changes = 7  # Increased to require more consecutive changes
         if ai_model == "gemini":
             self.gemini_detector = GeminiDetector()
         elif ai_model == "openai":
