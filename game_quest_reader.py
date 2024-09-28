@@ -159,12 +159,12 @@ class GameAnalyzer:
 
                 history = self.conversation_history.get_formatted_history()
                 messages = [
-                    {"role": "system", "content": "You are a game companion analyzing screenshots. Keep your answers to a maximum of 3 sentences. Provide only viable information."},
+                    {"role": "system", "content": "You are a game companion analyzing screenshots. Keep your answers to a maximum of 3 sentences. Provide only viable information. Disregard any chat logs or text conversations visible in the game screenshot."},
                     *history,
                     {
                         "role": "user",
                         "content": [
-                            {"type": "text", "text": "Analyze this game screenshot, considering our conversation history."},
+                            {"type": "text", "text": "Analyze this game screenshot, considering our conversation history. Ignore any in-game chat logs or text conversations."},
                             {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{img_str}"}}
                         ],
                     }
@@ -270,7 +270,7 @@ class GeminiDetector:
 
     def analyze_with_vision(self, image):
         pil_image = self.tensor_to_image(image)
-        prompt = "Analyze this game screenshot and provide a concise, insightful interpretation, including any relevant strategic advice or lore connections. Keep your response to 3 sentences maximum. Consider the conversation history for context."
+        prompt = "Analyze this game screenshot and provide a concise, insightful interpretation, including any relevant strategic advice or lore connections. Disregard any chat logs or text conversations visible in the game screenshot. Keep your response to 3 sentences maximum. Consider the conversation history for context."
         
         try:
             history = self.conversation_history.get_formatted_history()
