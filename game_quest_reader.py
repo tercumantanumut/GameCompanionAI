@@ -454,10 +454,19 @@ def start_game_analysis(analyzer, area=None):
 
             print(feedback)  # Always print feedback for better user awareness
 
-            if change_detected and not speaking:
+            # Check for voice input
+            voice_input = get_voice_input()
+
+            if (change_detected or voice_input) and not speaking:
                 print("Analyzing...")
                 focus_image = current_screenshot.crop(focus_area) if focus_area else current_screenshot
-                analysis = analyzer.analyze_with_vision(focus_image)
+                
+                if voice_input:
+                    combined_prompt = f"Analyze this game screenshot, considering our conversation history. Additionally, respond to the following player input: {voice_input}"
+                    analysis = analyzer.analyze_with_vision(focus_image, combined_prompt)
+                else:
+                    analysis = analyzer.analyze_with_vision(focus_image)
+                
                 print(f"Analysis: {analysis}")
                 speaking = True
                 speak_text(analysis)
