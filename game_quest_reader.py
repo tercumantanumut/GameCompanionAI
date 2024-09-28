@@ -230,11 +230,12 @@ class GameAnalyzer:
 
                 payload = {
                     "model": "llava",
-                    "prompt": f"{self.system_prompt}\n\nConversation history:\n{json.dumps(history)}\n\nUser: {prompt}\n\nAssistant:",
+                    "prompt": f"{self.system_prompt}\n\nConversation history:\n{json.dumps(history)}\n\nUser: {prompt}",
+                    "stream": False,
                     "images": [img_str]
                 }
 
-                response = requests.post(self.ollama_url, json=payload)
+                response = requests.post("http://localhost:11434/api/generate", json=payload)
                 response.raise_for_status()
                 analysis = response.json()['response']
 
@@ -551,7 +552,8 @@ def analyze_text_with_ai(text, ai_model, conversation_history):
             
             payload = {
                 "model": "llama2",
-                "prompt": f"Conversation history:\n{json.dumps(history)}\n\nUser: {prompt}\n\nAssistant:",
+                "prompt": f"Conversation history:\n{json.dumps(history)}\n\nUser: {prompt}",
+                "stream": False
             }
 
             response = requests.post("http://localhost:11434/api/generate", json=payload)
