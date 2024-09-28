@@ -18,6 +18,7 @@ import keyboard
 import json
 import torch
 from collections import deque
+from skimage.metrics import structural_similarity as ssim
 
 class AreaSelector:
     def __init__(self, master):
@@ -79,6 +80,9 @@ class GameAnalyzer:
         self.focus_area = None
         self.ai_model = ai_model
         self.conversation_history = ConversationHistory()
+        self.change_threshold = 0.1  # Adjust this value to fine-tune sensitivity
+        self.consecutive_changes = 0
+        self.max_consecutive_changes = 3  # Number of consecutive changes before triggering analysis
         if ai_model == "gemini":
             self.gemini_detector = GeminiDetector()
         elif ai_model == "openai":
@@ -90,25 +94,37 @@ class GameAnalyzer:
     def detect_changes(self, current_screenshot):
         if self.previous_screenshot is None:
             self.previous_screenshot = current_screenshot
-            return False, None
+            return False, None, "Initial screenshot captured."
 
-        diff = cv2.absdiff(
-            cv2.cvtColor(np.array(self.previous_screenshot), cv2.COLOR_RGB2GRAY),
-            cv2.cvtColor(np.array(current_screenshot), cv2.COLOR_RGB2GRAY)
-        )
-        
-        threshold = cv2.threshold(diff, 25, 255, cv2.THRESH_BINARY)[1]
-        contours, _ = cv2.findContours(threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # Convert images to grayscale
+        prev_gray = cv2.cvtColor(np.array(self.previous_screenshot), cv2.COLOR_RGB2GRAY)
+        curr_gray = cv2.cvtColor(np.array(current_screenshot), cv2.COLOR_RGB2GRAY)
+
+        # Compute SSIM between the two images
+        (score, diff) = ssim(prev_gray, curr_gray, full=True)
+        diff = (diff * 255).astype("uint8")
+
+        # Threshold the difference image, then find contours
+        thresh = cv2.threshold(diff, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
+        contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         significant_changes = [cv2.boundingRect(c) for c in contours if cv2.contourArea(c) > 1000]
 
+        change_percentage = 1 - score
         self.previous_screenshot = current_screenshot
 
-        if significant_changes:
-            x, y, w, h = max(significant_changes, key=lambda b: b[2] * b[3])
-            return True, (x, y, x+w, y+h)
-        
-        return False, None
+        if change_percentage > self.change_threshold:
+            self.consecutive_changes += 1
+            if self.consecutive_changes >= self.max_consecutive_changes:
+                self.consecutive_changes = 0
+                if significant_changes:
+                    x, y, w, h = max(significant_changes, key=lambda b: b[2] * b[3])
+                    return True, (x, y, x+w, y+h), f"Significant change detected. Change percentage: {change_percentage:.2%}"
+                else:
+                    return True, None, f"Overall change detected. Change percentage: {change_percentage:.2%}"
+        else:
+            self.consecutive_changes = 0
+            return False, None, f"No significant change. Change percentage: {change_percentage:.2%}"
 
     def tensor_to_image(self, image):
         if isinstance(image, torch.Tensor):
@@ -403,16 +419,18 @@ def start_game_analysis(analyzer, area=None):
             current_screenshot = analyzer.capture_full_screen()
             if area:
                 current_screenshot = current_screenshot.crop(area)
-            change_detected, focus_area = analyzer.detect_changes(current_screenshot)
+            change_detected, focus_area, feedback = analyzer.detect_changes(current_screenshot)
+
+            print(feedback)  # Always print feedback for better user awareness
 
             if change_detected:
-                print("Significant change detected. Analyzing...")
-                focus_image = current_screenshot.crop(focus_area) if area else current_screenshot
+                print("Analyzing...")
+                focus_image = current_screenshot.crop(focus_area) if focus_area else current_screenshot
                 analysis = analyzer.analyze_with_vision(focus_image)
                 print(f"Analysis: {analysis}")
                 speak_text(analysis)
 
-            time.sleep(1)  # Adjust the interval as needed
+            time.sleep(0.5)  # Reduced interval for more responsive detection
     except KeyboardInterrupt:
         print("\nGame Analysis stopped.")
 
