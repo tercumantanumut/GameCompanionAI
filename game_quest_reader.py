@@ -142,7 +142,7 @@ class GameAnalyzer:
         else:
             raise ValueError("Input must be a PyTorch tensor or a PIL Image")
 
-    def analyze_with_vision(self, image):
+    def analyze_with_vision(self, image, custom_prompt=None):
         if self.ai_model == "openai":
             load_dotenv()
             api_key = os.getenv('OPENAI_API_KEY')
@@ -159,13 +159,16 @@ class GameAnalyzer:
                 img_str = b64encode(buffered.getvalue()).decode('utf-8')
 
                 history = self.conversation_history.get_formatted_history()
+                default_prompt = "Analyze this game screenshot, considering our conversation history. Ignore any in-game chat logs or text conversations."
+                prompt = custom_prompt if custom_prompt else default_prompt
+
                 messages = [
                     {"role": "system", "content": "You are a game companion analyzing screenshots. Keep your answers to a maximum of 3 sentences. Provide only viable information. Disregard any chat logs or text conversations visible in the game screenshot."},
                     *history,
                     {
                         "role": "user",
                         "content": [
-                            {"type": "text", "text": "Analyze this game screenshot, considering our conversation history. Ignore any in-game chat logs or text conversations."},
+                            {"type": "text", "text": prompt},
                             {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{img_str}"}}
                         ],
                     }
@@ -177,14 +180,14 @@ class GameAnalyzer:
                     max_tokens=300,
                 )
                 analysis = response.choices[0].message.content
-                self.conversation_history.add("user", "Analyze this game screenshot.")
+                self.conversation_history.add("user", prompt)
                 self.conversation_history.add("assistant", analysis)
                 return analysis
             except Exception as e:
                 print(f"Error during OpenAI Vision analysis: {str(e)}")
                 return "Unable to analyze image due to an error."
         elif self.ai_model == "gemini":
-            return self.gemini_detector.analyze_with_vision(self.tensor_to_image(image))
+            return self.gemini_detector.analyze_with_vision(self.tensor_to_image(image), custom_prompt)
         else:
             return "Invalid AI model selected."
 
@@ -269,9 +272,10 @@ class GeminiDetector:
         else:
             raise ValueError("Input must be a PyTorch tensor or a PIL Image")
 
-    def analyze_with_vision(self, image):
+    def analyze_with_vision(self, image, custom_prompt=None):
         pil_image = self.tensor_to_image(image)
-        prompt = "Analyze this game screenshot and provide a concise, insightful interpretation, including any relevant strategic advice or lore connections. Disregard any chat logs or text conversations visible in the game screenshot. Keep your response to 3 sentences maximum. Consider the conversation history for context."
+        default_prompt = "Analyze this game screenshot and provide a concise, insightful interpretation, including any relevant strategic advice or lore connections. Disregard any chat logs or text conversations visible in the game screenshot. Keep your response to 3 sentences maximum. Consider the conversation history for context."
+        prompt = custom_prompt if custom_prompt else default_prompt
         
         try:
             history = self.conversation_history.get_formatted_history()
@@ -535,7 +539,9 @@ def main():
         print("Ctrl+V pressed. Listening for voice input...")
         voice_input = get_voice_input()
         if voice_input:
-            analysis = analyzer.analyze_text_with_ai(voice_input, ai_model, conversation_history)
+            screenshot = analyzer.capture_full_screen()
+            combined_prompt = f"Analyze this game screenshot, considering our conversation history. Additionally, respond to the following player input: {voice_input}"
+            analysis = analyzer.analyze_with_vision(screenshot, combined_prompt)
             print(f"AI Analysis: {analysis}")
             speak_text(analysis)
 
