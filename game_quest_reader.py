@@ -90,7 +90,7 @@ class GameAnalyzer:
             self.gemini_detector = GeminiDetector()
         elif ai_model == "openai":
             self.openai_client = openai.OpenAI(api_key=os.getenv('OPENAI_API_KEY'), base_url=os.getenv('OPENAI_API_BASE', 'https://api.openai.com/v1'))
-        self.system_prompt = "You are an advanced AI game companion, analyzing screenshots and providing insights. Keep your answers concise, maximum 3 sentences. Provide only viable information. Disregard any chat logs or text conversations visible in the game screenshot."
+        self.system_prompt = "You are an advanced AI game companion, analyzing screenshots and providing insights. Keep your answers concise, maximum 3 sentences. Provide only viable information. Disregard any chat logs or text conversations visible in the game screenshot. Always consider the conversation history when providing analysis."
 
     def summarize_conversation(self):
         summary_prompt = "Summarize the key points of our conversation so far in 2-3 sentences. Focus on the most important game-related information and insights."
@@ -207,12 +207,12 @@ class GameAnalyzer:
                     self.conversation_history.clear()
                     self.conversation_history.add("system", f"Previous conversation summary: {summary}")
                 
-                return "Based on our conversation history and the current screenshot: " + analysis
+                return f"Based on our conversation history and the current screenshot: {analysis}"
             except Exception as e:
                 print(f"Error during OpenAI Vision analysis: {str(e)}")
                 return "Unable to analyze image due to an error."
         elif self.ai_model == "gemini":
-            return self.gemini_detector.analyze_with_vision(self.tensor_to_image(image), custom_prompt)
+            return self.gemini_detector.analyze_with_vision(self.tensor_to_image(image), custom_prompt, self.conversation_history)
         else:
             return "Invalid AI model selected."
 
@@ -288,8 +288,6 @@ class GeminiDetector:
             genai.configure(api_key=self.api_key, transport='rest')
         self.model = genai.GenerativeModel('gemini-1.5-pro-latest')
         self.ai_model = "gemini"
-        self.conversation_history = ConversationHistory()
-        self.conversation_history = ConversationHistory()
 
     def tensor_to_image(self, image):
         if isinstance(image, torch.Tensor):
@@ -301,13 +299,13 @@ class GeminiDetector:
         else:
             raise ValueError("Input must be a PyTorch tensor or a PIL Image")
 
-    def analyze_with_vision(self, image, custom_prompt=None):
+    def analyze_with_vision(self, image, custom_prompt=None, conversation_history=None):
         pil_image = self.tensor_to_image(image)
         default_prompt = "Analyze this game screenshot and provide a concise, insightful interpretation, including any relevant strategic advice or lore connections. Disregard any chat logs or text conversations visible in the game screenshot. Keep your response to 3 sentences maximum. Consider the conversation history for context."
         prompt = custom_prompt if custom_prompt else default_prompt
         
         try:
-            history = self.conversation_history.get_formatted_history()
+            history = conversation_history.get_formatted_history() if conversation_history else []
             formatted_messages = []
             for item in history:
                 role = "user" if item["role"] == "user" else "model"
@@ -331,9 +329,10 @@ class GeminiDetector:
             
             response = self.model.generate_content(formatted_messages)
             analysis = response.text
-            self.conversation_history.add("user", prompt)
-            self.conversation_history.add("model", analysis)
-            return analysis
+            if conversation_history:
+                conversation_history.add("user", prompt)
+                conversation_history.add("model", analysis)
+            return f"Based on the conversation history and the current screenshot: {analysis}"
         except Exception as e:
             print(f"Error during Gemini Vision analysis: {str(e)}")
             return "Unable to analyze image due to an error."
