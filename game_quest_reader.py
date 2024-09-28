@@ -80,9 +80,9 @@ class GameAnalyzer:
         self.focus_area = None
         self.ai_model = ai_model
         self.conversation_history = ConversationHistory()
-        self.change_threshold = 0.5  # Adjust this value to fine-tune sensitivity
+        self.change_threshold = 0.7  # Increased threshold to reduce sensitivity
         self.consecutive_changes = 0
-        self.max_consecutive_changes = 3  # Number of consecutive changes before triggering analysis
+        self.max_consecutive_changes = 5  # Increased to require more consecutive changes
         if ai_model == "gemini":
             self.gemini_detector = GeminiDetector()
         elif ai_model == "openai":
@@ -108,7 +108,7 @@ class GameAnalyzer:
         thresh = cv2.threshold(diff, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
         contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-        significant_changes = [cv2.boundingRect(c) for c in contours if cv2.contourArea(c) > 1000]
+        significant_changes = [cv2.boundingRect(c) for c in contours if cv2.contourArea(c) > 2000]  # Increased area threshold
 
         change_percentage = 1 - score
         self.previous_screenshot = current_screenshot
@@ -124,6 +124,10 @@ class GameAnalyzer:
                     return True, None, f"Overall change detected. Change percentage: {change_percentage:.2%}"
         else:
             self.consecutive_changes = 0
+
+        # Ignore very small changes
+        if change_percentage < 0.05:
+            return False, None, "No change detected."
 
         return False, None, f"No significant change. Change percentage: {change_percentage:.2%}"
 
