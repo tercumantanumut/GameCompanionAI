@@ -494,7 +494,7 @@ def main():
 
     mode_root = tk.Tk()
     mode_root.withdraw()  # Hide the main window
-    mode = simpledialog.askstring("Mode Selection", "Choose mode:\n1. Area Selection (Tesseract)\n2. Area Selection (AI)\n3. Game Analysis\n4. Wait for Ctrl+5\n5. Player in the Loop (with TTS)", initialvalue="1")
+    mode = simpledialog.askstring("Mode Selection", "Choose mode:\n1. Area Selection (Tesseract)\n2. Area Selection (AI)\n3. Game Analysis\n4. Wait for Ctrl+5\n5. Player in the Loop (with TTS) - Limited functionality with Gemini", initialvalue="1")
     mode_root.destroy()
 
     selected_area = None
@@ -549,6 +549,8 @@ def main():
             print("\nGame Quest Reader stopped.")
 
     elif mode == "5":
+        if ai_model == "gemini":
+            print("Warning: Player in the Loop mode may have limited functionality with Gemini AI model.")
         print("Starting Player in the Loop mode with automatic TTS...")
         player_in_the_loop(analyzer)
 

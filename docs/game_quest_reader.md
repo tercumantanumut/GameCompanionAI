@@ -55,7 +55,7 @@ Game Quest Reader is an advanced application designed to enhance the gaming expe
    - For Area Selection modes, use the mouse to select the desired screen area.
    - For Game Analysis, the program will continuously monitor the full screen.
    - In Wait for Ctrl+5 mode, press Ctrl+5 to trigger analysis.
-   - In Player in the Loop mode, interact with the AI through the provided UI.
+   - In Player in the Loop mode, interact with the AI through the provided UI. If using Gemini, some features may be limited.
 
 4. To exit, press Ctrl+C in the terminal or close the application window.
 
