@@ -282,10 +282,30 @@ class GeminiDetector:
         
         try:
             history = self.conversation_history.get_formatted_history()
-            response = self.model.generate_content([*history, {"role": "user", "content": prompt}, pil_image])
+            formatted_messages = [
+                {"role": "user" if i % 2 == 0 else "model", "parts": [{"text": item["content"]}]}
+                for i, item in enumerate(history)
+            ]
+            formatted_messages.append({"role": "user", "parts": [{"text": prompt}]})
+            
+            # Convert PIL Image to bytes
+            img_byte_arr = io.BytesIO()
+            pil_image.save(img_byte_arr, format='PNG')
+            img_byte_arr = img_byte_arr.getvalue()
+            
+            # Add the image to the last message
+            formatted_messages[-1]["parts"].append({
+                "inline_data": {
+                    "mime_type": "image/png",
+                    "data": base64.b64encode(img_byte_arr).decode('utf-8')
+                }
+            })
+            
+            response = self.model.generate_content(formatted_messages)
+            analysis = response.text
             self.conversation_history.add("user", prompt)
-            self.conversation_history.add("assistant", response.text)
-            return response.text
+            self.conversation_history.add("assistant", analysis)
+            return analysis
         except Exception as e:
             print(f"Error during Gemini Vision analysis: {str(e)}")
             return "Unable to analyze image due to an error."
