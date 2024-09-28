@@ -261,6 +261,7 @@ class GeminiDetector:
         self.model = genai.GenerativeModel('gemini-1.5-pro-latest')
         self.ai_model = "gemini"
         self.conversation_history = ConversationHistory()
+        self.conversation_history = ConversationHistory()
 
     def tensor_to_image(self, image):
         if isinstance(image, torch.Tensor):
@@ -313,13 +314,21 @@ class GeminiDetector:
         
         return False, None
 
-    def analyze_with_vision(self, image):
+    def analyze_with_vision(self, image, custom_prompt=None):
         pil_image = self.tensor_to_image(image)
-        prompt = "Analyze this game screenshot and provide a concise, insightful interpretation, including any relevant strategic advice or lore connections. Keep your response to 3 sentences maximum."
+        default_prompt = "Analyze this game screenshot and provide a concise, insightful interpretation, including any relevant strategic advice or lore connections. Keep your response to 3 sentences maximum."
+        prompt = custom_prompt if custom_prompt else default_prompt
         
         try:
-            response = self.model.generate_content([prompt, pil_image])
-            return response.text
+            history = self.conversation_history.get_formatted_history()
+            formatted_messages = [{"parts": [{"text": item["content"]}]} for item in history]
+            formatted_messages.append({"parts": [{"text": prompt}, {"image": pil_image}]})
+            
+            response = self.model.generate_content(formatted_messages)
+            analysis = response.text
+            self.conversation_history.add("user", prompt)
+            self.conversation_history.add("assistant", analysis)
+            return analysis
         except Exception as e:
             print(f"Error during Gemini Vision analysis: {str(e)}")
             return "Unable to analyze image due to an error."
