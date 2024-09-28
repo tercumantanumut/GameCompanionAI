@@ -168,7 +168,7 @@ class GameAnalyzer:
 
             if not api_key:
                 print("Error: OPENAI_API_KEY not found in environment variables.")
-                return "Unable to analyze image due to missing API key."
+                return "Oops! My crystal ball is out of juice. Can't see a thing!"
 
             try:
                 # Convert the image to base64
@@ -177,11 +177,11 @@ class GameAnalyzer:
                 img_str = b64encode(buffered.getvalue()).decode('utf-8')
 
                 history = self.conversation_history.get_formatted_history()
-                default_prompt = "Analyze this game screenshot, considering our conversation history. Ignore any in-game chat logs or text conversations. If relevant, mention that you're using previous context in your response."
+                default_prompt = "You're a witty, sarcastic game companion. Analyze this screenshot and give a funny, personal take on what's happening. Keep it short, sweet, and hilarious. No AI jargon allowed!"
                 prompt = custom_prompt if custom_prompt else default_prompt
 
                 messages = [
-                    {"role": "system", "content": self.system_prompt},
+                    {"role": "system", "content": "You are a hilarious, snarky AI game companion. Your job is to make the player laugh while giving actually useful game insights. Be brief, be funny, be helpful."},
                     *history,
                     {
                         "role": "user",
@@ -195,7 +195,7 @@ class GameAnalyzer:
                 response = self.openai_client.chat.completions.create(
                     model="gpt-4-vision-preview",
                     messages=messages,
-                    max_tokens=300,
+                    max_tokens=100,
                 )
                 analysis = response.choices[0].message.content
                 self.conversation_history.add("user", prompt)
@@ -205,16 +205,16 @@ class GameAnalyzer:
                 if len(self.conversation_history.history) >= 45:
                     summary = self.summarize_conversation()
                     self.conversation_history.clear()
-                    self.conversation_history.add("system", f"Previous conversation summary: {summary}")
+                    self.conversation_history.add("system", f"Previous hilarious adventures: {summary}")
                 
-                return f"Based on our conversation history and the current screenshot: {analysis}"
+                return analysis  # Return the raw, funny analysis without any prefixes
             except Exception as e:
                 print(f"Error during OpenAI Vision analysis: {str(e)}")
-                return "Unable to analyze image due to an error."
+                return "Whoops! My AI brain just did a backflip. Give me a sec to recover!"
         elif self.ai_model == "gemini":
             return self.gemini_detector.analyze_with_vision(self.tensor_to_image(image), custom_prompt, self.conversation_history)
         else:
-            return "Invalid AI model selected."
+            return "Uh-oh, looks like someone tried to summon an AI that doesn't exist. Nice try, though!"
 
     def analyze_text_with_ai(self, text, ai_model, conversation_history):
         if ai_model == "openai":
