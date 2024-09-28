@@ -162,7 +162,7 @@ class GameAnalyzer:
                 img_str = b64encode(buffered.getvalue()).decode('utf-8')
 
                 history = self.conversation_history.get_formatted_history()
-                default_prompt = "Analyze this game screenshot, considering our conversation history. Ignore any in-game chat logs or text conversations."
+                default_prompt = "Analyze this game screenshot, considering our conversation history. Ignore any in-game chat logs or text conversations. If relevant, mention that you're using previous context in your response."
                 prompt = custom_prompt if custom_prompt else default_prompt
 
                 messages = [
@@ -185,7 +185,7 @@ class GameAnalyzer:
                 analysis = response.choices[0].message.content
                 self.conversation_history.add("user", prompt)
                 self.conversation_history.add("assistant", analysis)
-                return analysis
+                return "Based on our conversation history and the current screenshot: " + analysis
             except Exception as e:
                 print(f"Error during OpenAI Vision analysis: {str(e)}")
                 return "Unable to analyze image due to an error."
