@@ -283,7 +283,7 @@ class GeminiDetector:
         try:
             history = self.conversation_history.get_formatted_history()
             formatted_messages = []
-            for i, item in enumerate(history):
+            for item in history:
                 role = "user" if item["role"] == "user" else "model"
                 formatted_messages.append({"role": role, "parts": [{"text": item["content"]}]})
             
