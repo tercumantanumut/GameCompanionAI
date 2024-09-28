@@ -20,6 +20,8 @@ import torch
 from collections import deque
 from skimage.metrics import structural_similarity as ssim
 import speech_recognition as sr
+import io
+import base64
 
 class AreaSelector:
     def __init__(self, master):
@@ -321,8 +323,21 @@ class GeminiDetector:
         
         try:
             history = self.conversation_history.get_formatted_history()
-            formatted_messages = [{"parts": [{"text": item["content"]}]} for item in history]
-            formatted_messages.append({"parts": [{"text": prompt}, {"image": pil_image}]})
+            formatted_messages = [{"role": item["role"], "parts": [{"text": item["content"]}]} for item in history]
+            
+            # Convert PIL Image to bytes
+            img_byte_arr = io.BytesIO()
+            pil_image.save(img_byte_arr, format='PNG')
+            img_byte_arr = img_byte_arr.getvalue()
+            
+            # Add the new message with text and image
+            formatted_messages.append({
+                "role": "user",
+                "parts": [
+                    {"text": prompt},
+                    {"inline_data": {"mime_type": "image/png", "data": base64.b64encode(img_byte_arr).decode('utf-8')}}
+                ]
+            })
             
             response = self.model.generate_content(formatted_messages)
             analysis = response.text
