@@ -282,10 +282,12 @@ class GeminiDetector:
         
         try:
             history = self.conversation_history.get_formatted_history()
-            formatted_messages = [
-                {"role": "user" if i % 2 == 0 else "model", "parts": [{"text": item["content"]}]}
-                for i, item in enumerate(history)
-            ]
+            formatted_messages = []
+            for i, item in enumerate(history):
+                role = "user" if item["role"] == "user" else "model"
+                formatted_messages.append({"role": role, "parts": [{"text": item["content"]}]})
+            
+            # Add the new user message with the prompt
             formatted_messages.append({"role": "user", "parts": [{"text": prompt}]})
             
             # Convert PIL Image to bytes
@@ -304,7 +306,7 @@ class GeminiDetector:
             response = self.model.generate_content(formatted_messages)
             analysis = response.text
             self.conversation_history.add("user", prompt)
-            self.conversation_history.add("assistant", analysis)
+            self.conversation_history.add("model", analysis)
             return analysis
         except Exception as e:
             print(f"Error during Gemini Vision analysis: {str(e)}")
