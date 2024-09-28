@@ -360,6 +360,23 @@ def speak_text(text):
     engine.say(text)
     engine.runAndWait()
 
+def get_voice_input():
+    recognizer = sr.Recognizer()
+    with sr.Microphone() as source:
+        print("Listening for voice input...")
+        audio = recognizer.listen(source)
+    
+    try:
+        text = recognizer.recognize_google(audio)
+        print(f"You said: {text}")
+        return text
+    except sr.UnknownValueError:
+        print("Sorry, I couldn't understand that.")
+        return None
+    except sr.RequestError as e:
+        print(f"Could not request results from Google Speech Recognition service; {e}")
+        return None
+
 def analyze_text_with_ai(text, ai_model, conversation_history):
     if ai_model == "openai":
         load_dotenv()
