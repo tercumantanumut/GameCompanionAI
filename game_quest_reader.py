@@ -389,7 +389,7 @@ class GeminiDetector:
             analysis = response.text
             self.conversation_history.add("user", prompt)
             self.conversation_history.add("model", analysis)
-            return f"Based on the conversation history and the current screenshot: {analysis}"
+            return analysis
         except Exception as e:
             print(f"Error during Gemini Vision analysis: {str(e)}")
             return "Unable to analyze image due to an error."
