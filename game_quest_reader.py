@@ -769,9 +769,18 @@ def main():
         if voice_input:
             screenshot = analyzer.capture_full_screen()
             combined_prompt = f"Analyze this game screenshot, considering our conversation history. Additionally, respond to the following player input: {voice_input}"
-            analysis = analyzer.analyze_with_vision(screenshot, combined_prompt)
-            print(f"AI Analysis: {analysis}")
-            speak_text(analysis)
+            full_analysis = analyzer.analyze_with_vision(screenshot, combined_prompt)
+        
+            # Extract the part after "Here's how I'd respond to the player:"
+            response_start = full_analysis.find("Here's how I'd respond to the player:")
+            if response_start != -1:
+                player_response = full_analysis[response_start + len("Here's how I'd respond to the player:"):].strip()
+                print(f"AI Response: {player_response}")
+            else:
+                player_response = full_analysis
+                print(f"AI Analysis: {player_response}")
+        
+            # Don't speak the response
         else:
             print("No voice input detected or recognized.")
 
