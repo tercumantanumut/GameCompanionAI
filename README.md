@@ -19,7 +19,7 @@ Game Companion AI is an advanced application designed to enhance the gaming expe
 - **Conversation History**:
     - Keeps track of player interactions for context-aware responses
 - **Screen Change Detection**:
-    - Automatically updates based on in-game screen changes
+    - Automatically updates based on in-game screen changes (not really working nice)
 - **Voice Input**:
     - Players can ask questions or issue commands using their voice
 - **Customizable AI Parameters**:
