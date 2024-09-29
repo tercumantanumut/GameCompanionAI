@@ -1,6 +1,6 @@
 # Game Companion AI 
 
-Game Quest Reader is an advanced application designed to enhance the gaming experience by providing real-time analysis and interpretation of game content using AI-powered vision and text analysis.
+Game Companion AI is an advanced application designed to enhance the gaming experience by providing real-time analysis and interpretation of game content using AI-powered vision and text analysis.
 
 ## Features
 
