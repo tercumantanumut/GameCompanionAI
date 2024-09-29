@@ -1,5 +1,4 @@
 import pyautogui
-import pytesseract
 from PIL import Image, ImageTk
 import pyttsx3
 import time
@@ -508,40 +507,9 @@ class GeminiDetector:
         
         return False, None
 
-def set_tesseract_path():
-    default_path = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-    
-    if os.path.exists(default_path):
-        return default_path
-    
-    print("Tesseract OCR not found in the default location.")
-    print("Please download and install Tesseract OCR from:")
-    print("https://github.com/UB-Mannheim/tesseract/wiki")
-    
-    custom_path = input("Enter the full path to tesseract.exe (or press Enter to exit): ")
-    
-    if custom_path:
-        if os.path.exists(custom_path):
-            return custom_path
-        else:
-            print("Invalid path. Exiting.")
-    
-    sys.exit(1)
-
-# Set the path to the Tesseract executable
-pytesseract.pytesseract.tesseract_cmd = set_tesseract_path()
-
 def capture_screen_area(area):
     screenshot = pyautogui.screenshot(region=area)
     return cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
-
-def extract_text(image):
-    try:
-        return pytesseract.image_to_string(image)
-    except Exception as e:
-        print(f"Error: {e}")
-        print("Please ensure Tesseract OCR is installed and the path is correct.")
-        return None
 
 def speak_text(text):
     engine = pyttsx3.init()

@@ -38,12 +38,9 @@ Game Quest Reader is an advanced application designed to enhance the gaming expe
 
 2. Install required dependencies:
    ```
-   pip install opencv-python numpy pyautogui pytesseract pillow pyttsx3 openai google-generativeai python-dotenv keyboard requests SpeechRecognition pywin32 scikit-image torch
+   pip install opencv-python numpy pyautogui pillow pyttsx3 openai google-generativeai python-dotenv keyboard requests SpeechRecognition pywin32 scikit-image torch
    ```
 
-3. Install Tesseract OCR:
-   - Download from: https://github.com/UB-Mannheim/tesseract/wiki
-   - Add the Tesseract installation directory to your system PATH.
 
 4. Set up API keys:
    - Create a `.env` file in the project root.
@@ -89,7 +86,6 @@ Game Quest Reader is an advanced application designed to enhance the gaming expe
 
 - Ensure all dependencies are correctly installed.
 - Verify that API keys are set correctly in the `.env` file.
-- Check that Tesseract OCR is installed and the path is set correctly in your system PATH.
 - For Ollama issues, ensure the Ollama service is running and accessible.
 - If voice input is not working, check your microphone settings and ensure you have an active internet connection for speech recognition.
 
