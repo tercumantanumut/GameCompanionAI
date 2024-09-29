@@ -327,11 +327,14 @@ class GameAnalyzer:
             return "Invalid AI model selected."
 
 class ConversationHistory:
-    def __init__(self, max_length=50):
-        self.history = deque(maxlen=max_length)
+    def __init__(self, max_exchanges=2):
+        self.history = deque(maxlen=max_exchanges * 2)  # Each exchange has 2 messages
 
     def add(self, role, content):
-        self.history.append({"role": role, "content": content})
+        if role == "user" and content.startswith("Analyze this game screenshot"):
+            self.history.append({"role": role, "content": "--- NEW IMAGE ANALYSIS ---"})
+        else:
+            self.history.append({"role": role, "content": content})
 
     def get_formatted_history(self):
         return list(self.history)
@@ -541,11 +544,18 @@ def analyze_text_with_ai(text, ai_model, conversation_history):
     elif ai_model == "ollama":
         try:
             history = conversation_history.get_formatted_history()
-            prompt = f"You are an advanced AI game companion. Consider our conversation history. Analyze the following in-game text and provide a concise, insightful interpretation, including any relevant strategic advice or lore connections: {text}"
+            prompt = (
+                "You are an advanced AI game companion. Focus primarily on the new image or text provided, "
+                "while briefly referencing recent history only if directly relevant. "
+                "Provide a concise, insightful interpretation, including any relevant strategic advice or lore connections. "
+                f"Analyze the following: {text}"
+            )
+            
+            formatted_history = "\n".join([f"{item['role']}: {item['content']}" for item in history])
             
             payload = {
                 "model": "llama2",
-                "prompt": f"Conversation history:\n{json.dumps(history)}\n\nUser: {prompt}",
+                "prompt": f"Recent conversation:\n{formatted_history}\n\nUser: {prompt}",
                 "stream": False
             }
 
@@ -553,7 +563,7 @@ def analyze_text_with_ai(text, ai_model, conversation_history):
             response.raise_for_status()
             analysis = response.json()['response']
 
-            conversation_history.add("user", f"Analyze: {text}")
+            conversation_history.add("user", "New image analysis request")
             conversation_history.add("assistant", analysis)
             return analysis
         except Exception as e:
