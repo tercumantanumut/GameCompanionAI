@@ -250,54 +250,32 @@ class GameAnalyzer:
                 return "Oops! My crystal ball is out of juice. Can't see a thing!"
 
             try:
-                # Convert the image to base64
                 buffered = BytesIO()
                 image.save(buffered, format="PNG")
                 img_str = b64encode(buffered.getvalue()).decode('utf-8')
 
                 history = self.conversation_history.get_formatted_history()
-                default_prompt = """
-                You're a witty, sarcastic game companion. Analyze this screenshot and give a funny, personal take on what's happening. Keep it short, sweet, and hilarious. No AI jargon allowed!
-                Provide your response in the following JSON structure:
-                {
-                    "analysis": "Your funny analysis here",
-                    "game_insight": "A brief, useful game insight",
-                    "player_advice": "A short, sarcastic piece of advice for the player"
-                }
-                """
+                default_prompt = "You're a witty, sarcastic game companion. Analyze this screenshot and give a funny, personal take on what's happening. Keep it short, sweet, and hilarious. No AI jargon allowed!"
                 prompt = custom_prompt if custom_prompt else default_prompt
 
-                # Check if the prompt is a general question
-                if not custom_prompt or "screenshot" in prompt.lower() or "image" in prompt.lower():
-                    messages = [
-                        {"role": "system", "content": "You are a hilarious, snarky AI game companion. Your job is to make the player laugh while giving actually useful game insights. Be brief, be funny, be helpful. Always respond in the requested JSON format."},
-                        *history,
-                        {
-                            "role": "user",
-                            "content": [
-                                {"type": "text", "text": prompt},
-                                {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{img_str}"}}
-                            ],
-                        }
-                    ]
-                else:
-                    # For general questions, don't include the image
-                    messages = [
-                        {"role": "system", "content": "You are a witty and sarcastic AI companion. Answer general questions without referencing any game or screenshot. Always respond in the requested JSON format."},
-                        *history,
-                        {"role": "user", "content": prompt}
-                    ]
+                messages = [
+                    {"role": "system", "content": "You are a hilarious, snarky AI game companion. Your job is to make the player laugh while giving actually useful game insights. Be brief, be funny, be helpful. Provide a seamless response without using any labels or sections."},
+                    *history,
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": prompt},
+                            {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{img_str}"}}
+                        ],
+                    }
+                ]
 
                 response = self.openai_client.chat.completions.create(
                     model="gpt-4-vision-preview",
                     messages=messages,
-                    max_tokens=300,
-                    response_format={ "type": "json_object" }
+                    max_tokens=300
                 )
-                analysis_json = json.loads(response.choices[0].message.content)
-                
-                # Combine the JSON fields into a single string
-                analysis = f"{analysis_json['analysis']} {analysis_json['game_insight']} {analysis_json['player_advice']}"
+                analysis = response.choices[0].message.content.strip()
                 
                 if len(analysis) >= 300:
                     analysis = analysis[:297] + "..."
@@ -792,14 +770,11 @@ def main():
         voice_input = get_voice_input()
         if voice_input:
             screenshot = analyzer.capture_full_screen()
-            combined_prompt = f"Analyze this game screenshot, considering our conversation history. Additionally, respond to the following player input: {voice_input}"
+            combined_prompt = f"Analyze this game screenshot and respond to the player's input: '{voice_input}'. Provide a seamless response that incorporates both the screenshot analysis and addresses the player's question or comment. Be natural, funny, and insightful without using any labels or sections in your response."
             full_analysis = analyzer.analyze_with_vision(screenshot, combined_prompt)
         
-            # Extract the part after "Here's how I'd respond to the player:"
-            player_response = full_analysis.strip()
-            print(player_response)
-        
-            speak_text(player_response)  # Add this line to speak the response
+            print(full_analysis)
+            speak_text(full_analysis)
         else:
             print("No voice input detected or recognized.")
 
