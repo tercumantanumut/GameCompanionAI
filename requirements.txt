@@ -4,7 +4,7 @@ pyautogui==0.9.54
 pytesseract==0.3.10
 Pillow==10.2.0
 pyttsx3==2.90
-openai==1.6.1
+openai
 google-generativeai
 python-dotenv==1.0.0
 keyboard==0.13.5
