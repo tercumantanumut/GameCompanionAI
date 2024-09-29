@@ -259,36 +259,44 @@ class GameAnalyzer:
                 default_prompt = "You're a witty, sarcastic game companion. Analyze this screenshot and give a funny, personal take on what's happening. Keep it short, sweet, and hilarious. No AI jargon allowed!"
                 prompt = custom_prompt if custom_prompt else default_prompt
 
-                messages = [
-                    {"role": "system", "content": "You are a hilarious, snarky AI game companion. Your job is to make the player laugh while giving actually useful game insights. Be brief, be funny, be helpful."},
-                    *history,
-                    {
-                        "role": "user",
-                        "content": [
-                            {"type": "text", "text": prompt},
-                            {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{img_str}"}}
-                        ],
-                    }
-                ]
+                # Check if the prompt is a general question
+                if not custom_prompt or "screenshot" in custom_prompt.lower() or "image" in custom_prompt.lower():
+                    messages = [
+                        {"role": "system", "content": "You are a hilarious, snarky AI game companion. Your job is to make the player laugh while giving actually useful game insights. Be brief, be funny, be helpful."},
+                        *history,
+                        {
+                            "role": "user",
+                            "content": [
+                                {"type": "text", "text": prompt},
+                                {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{img_str}"}}
+                            ],
+                        }
+                    ]
+                else:
+                    # For general questions, don't include the image
+                    messages = [
+                        {"role": "system", "content": "You are a witty and sarcastic AI companion. Answer general questions without referencing any game or screenshot."},
+                        *history,
+                        {"role": "user", "content": prompt}
+                    ]
 
                 response = self.openai_client.chat.completions.create(
                     model="gpt-4-vision-preview",
                     messages=messages,
-                    max_tokens=300,  # Increased from 100 to 300
+                    max_tokens=300,
                 )
                 analysis = response.choices[0].message.content
-                if len(analysis) == 300:  # If the response reaches the max token limit
-                    analysis += "..."  # Append ellipsis to indicate truncation
+                if len(analysis) == 300:
+                    analysis += "..."
                 self.conversation_history.add("user", prompt)
                 self.conversation_history.add("assistant", analysis)
                 
-                # If the conversation history is getting too long, summarize it
                 if len(self.conversation_history.history) >= 45:
                     summary = self.summarize_conversation()
                     self.conversation_history.clear()
                     self.conversation_history.add("system", f"Previous hilarious adventures: {summary}")
                 
-                return analysis  # Return the raw, funny analysis without any prefixes
+                return analysis
             except Exception as e:
                 print(f"Error during OpenAI Vision analysis: {str(e)}")
                 return "Whoops! My AI brain just did a backflip. Give me a sec to recover!"
@@ -305,15 +313,27 @@ class GameAnalyzer:
                 default_prompt = "You're a witty, sarcastic game companion. Analyze this new screenshot and give a funny, personal take on what's happening. Keep it short, sweet, and hilarious. No AI jargon allowed! Consider the conversation history, but focus on the new image."
                 prompt = custom_prompt if custom_prompt else default_prompt
 
-                payload = {
-                    "model": "llava:7b",
-                    "prompt": f"{self.system_prompt}\n\nConversation history:\n{json.dumps(history)}\n\nUser: {prompt}\n\nNOTE: This is a new image. Analyze it independently while considering the conversation history.",
-                    "stream": False,
-                    "images": [img_str],
-                    "temperature": self.temperature,
-                    "top_p": self.top_p,
-                    "top_k": self.top_k
-                }
+                # Check if the prompt is a general question
+                if not custom_prompt or "screenshot" in prompt.lower() or "image" in prompt.lower():
+                    payload = {
+                        "model": "llava:7b",
+                        "prompt": f"{self.system_prompt}\n\nConversation history:\n{json.dumps(history)}\n\nUser: {prompt}\n\nNOTE: This is a new image. Analyze it independently while considering the conversation history.",
+                        "stream": False,
+                        "images": [img_str],
+                        "temperature": self.temperature,
+                        "top_p": self.top_p,
+                        "top_k": self.top_k
+                    }
+                else:
+                    # For general questions, don't include the image
+                    payload = {
+                        "model": "llama2",
+                        "prompt": f"You are a witty and sarcastic AI companion. Answer this general question without referencing any game or screenshot: {prompt}",
+                        "stream": False,
+                        "temperature": self.temperature,
+                        "top_p": self.top_p,
+                        "top_k": self.top_k
+                    }
 
                 response = requests.post(self.ollama_url, json=payload)
                 response.raise_for_status()
@@ -430,21 +450,26 @@ class GeminiDetector:
                 role = "user" if item["role"] == "user" else "model"
                 formatted_messages.append({"role": role, "parts": [{"text": item["content"]}]})
             
-            # Add the new user message with the prompt
-            formatted_messages.append({"role": "user", "parts": [{"text": prompt}]})
-            
-            # Convert PIL Image to bytes
-            img_byte_arr = BytesIO()
-            pil_image.save(img_byte_arr, format='PNG')
-            img_byte_arr = img_byte_arr.getvalue()
-            
-            # Add the image to the last message
-            formatted_messages[-1]["parts"].append({
-                "inline_data": {
-                    "mime_type": "image/png",
-                    "data": base64.b64encode(img_byte_arr).decode('utf-8')
-                }
-            })
+            # Check if the prompt is a general question
+            if not custom_prompt or "screenshot" in prompt.lower() or "image" in prompt.lower():
+                # Add the new user message with the prompt and image
+                formatted_messages.append({"role": "user", "parts": [{"text": prompt}]})
+                
+                # Convert PIL Image to bytes
+                img_byte_arr = BytesIO()
+                pil_image.save(img_byte_arr, format='PNG')
+                img_byte_arr = img_byte_arr.getvalue()
+                
+                # Add the image to the last message
+                formatted_messages[-1]["parts"].append({
+                    "inline_data": {
+                        "mime_type": "image/png",
+                        "data": base64.b64encode(img_byte_arr).decode('utf-8')
+                    }
+                })
+            else:
+                # For general questions, don't include the image
+                formatted_messages.append({"role": "user", "parts": [{"text": f"Answer this general question without referencing any game or screenshot: {prompt}"}]})
             
             response = self.model.generate_content(formatted_messages)
             analysis = response.text
