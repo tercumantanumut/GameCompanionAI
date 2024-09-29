@@ -7,15 +7,16 @@ Game Quest Reader is an advanced application designed to enhance the gaming expe
 ## Features
 
 1. **Multiple Analysis Modes:**
-   - Area Selection (Tesseract): Uses OCR to read text from a selected screen area.
    - Area Selection (AI): Uses AI vision to analyze a selected screen area.
    - Game Analysis: Continuously monitors the full screen for changes and provides AI analysis.
-   - Wait for Ctrl+5: Allows users to trigger analysis on-demand.
-   - Player in the Loop (with TTS): Interactive mode with AI responses and automatic text-to-speech.
+   - Screenshot Analysis (Ctrl+5): Allows users to trigger full-screen analysis on-demand.
+   - Voice Input Analysis (Ctrl+V): Listens for voice input and analyzes it along with a screenshot.
+   - Custom Area Analysis (Ctrl+6): Lets users select a custom area for analysis.
 
 2. **AI Model Options:**
-   - OpenAI (GPT-4)
+   - OpenAI (GPT-4 with vision capabilities)
    - Google Gemini
+   - Ollama (with customizable parameters)
 
 3. **Text-to-Speech (TTS) Integration:** Speaks analysis results aloud.
 
@@ -23,24 +24,39 @@ Game Quest Reader is an advanced application designed to enhance the gaming expe
 
 5. **Screen Change Detection:** Automatically detects significant changes in the game screen.
 
-## Setup
+6. **Voice Input:** Allows players to ask questions or give commands using their voice.
 
-1. Install required dependencies:
+7. **Customizable AI Parameters:** For Ollama, users can adjust temperature, top_p, and top_k values.
+
+## Installation
+
+1. Clone the repository:
    ```
-   pip install opencv-python numpy pyautogui pytesseract pillow pyttsx3 openai google-generativeai python-dotenv tkinter keyboard
+   git clone https://github.com/yourusername/game-quest-reader.git
+   cd game-quest-reader
    ```
 
-2. Install Tesseract OCR:
+2. Install required dependencies:
+   ```
+   pip install opencv-python numpy pyautogui pytesseract pillow pyttsx3 openai google-generativeai python-dotenv keyboard requests SpeechRecognition pywin32 scikit-image torch
+   ```
+
+3. Install Tesseract OCR:
    - Download from: https://github.com/UB-Mannheim/tesseract/wiki
-   - Set the path to the Tesseract executable in the script.
+   - Add the Tesseract installation directory to your system PATH.
 
-3. Set up API keys:
+4. Set up API keys:
    - Create a `.env` file in the project root.
    - Add your API keys:
      ```
      OPENAI_API_KEY=your_openai_api_key
      GOOGLE_API_KEY=your_google_api_key
+     OPENAI_API_BASE=https://api.openai.com/v1  # Optional: for OpenAI API base URL
      ```
+
+5. (Optional) Install and set up Ollama:
+   - Follow the installation instructions at: https://github.com/jmorganca/ollama
+   - Ensure Ollama is running and accessible at `http://localhost:11434`
 
 ## Usage
 
@@ -49,32 +65,38 @@ Game Quest Reader is an advanced application designed to enhance the gaming expe
    python game_quest_reader.py
    ```
 
-2. Select the AI model (OpenAI or Gemini).
+2. Select the AI model (OpenAI, Gemini, or Ollama).
+   - If choosing Ollama, you'll be prompted to set temperature, top_p, and top_k values.
 
 3. Choose an analysis mode:
-   - For Area Selection modes, use the mouse to select the desired screen area.
-   - For Game Analysis, the program will continuously monitor the full screen.
-   - In Wait for Ctrl+5 mode, press Ctrl+5 to trigger analysis.
-   - In Player in the Loop mode, interact with the AI through the provided UI. If using Gemini, some features may be limited.
+   - Area Selection (AI): Select a screen area for continuous analysis.
+   - Game Analysis: The program will continuously monitor the full screen.
 
-4. To exit, press Ctrl+C in the terminal or close the application window.
+4. Additional features:
+   - Press Ctrl+5 for instant full-screen analysis.
+   - Press Ctrl+V to use voice input for questions or commands.
+   - Press Ctrl+6 to select a custom area for one-time analysis.
+
+5. To exit, press Ctrl+C in the terminal or close the application window.
 
 ## Customization
 
 - Adjust the analysis interval in the `start_game_analysis` function.
-- Modify the AI prompts in the `analyze_text_with_ai` function for different analysis styles.
-- Customize the UI in the `player_in_the_loop` function.
+- Modify the AI prompts in the `analyze_with_vision` and `analyze_text_with_ai` functions for different analysis styles.
+- Customize the Ollama model and parameters in the `main` function.
 
 ## Troubleshooting
 
 - Ensure all dependencies are correctly installed.
 - Verify that API keys are set correctly in the `.env` file.
-- Check that Tesseract OCR is installed and the path is set correctly for OCR functionality.
+- Check that Tesseract OCR is installed and the path is set correctly in your system PATH.
+- For Ollama issues, ensure the Ollama service is running and accessible.
+- If voice input is not working, check your microphone settings and ensure you have an active internet connection for speech recognition.
 
 ## Contributing
 
-Contributions to the Game Quest Reader are welcome. Please ensure that your code adheres to the existing style and includes appropriate documentation.
+Contributions to the Game Quest Reader are welcome. Please ensure that your code adheres to the existing style and includes appropriate documentation. For major changes, please open an issue first to discuss what you would like to change.
 
 ## License
 
-[Specify the license under which this software is released]
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
