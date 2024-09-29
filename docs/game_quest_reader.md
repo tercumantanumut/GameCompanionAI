@@ -1,8 +1,8 @@
-# Game Quest Reader Documentation
+# Game Companion AI Documentation
 
 ## Overview
 
-Game Quest Reader is an advanced application designed to enhance the gaming experience by providing real-time analysis and interpretation of game content. It uses AI-powered vision and text analysis to offer insights, strategic advice, and lore connections based on the game's visual and textual elements.
+Game Companion AI is an advanced application designed to enhance the gaming experience by providing real-time analysis and interpretation of game content. It uses AI-powered vision and text analysis to offer insights, strategic advice, and lore connections based on the game's visual and textual elements.
 
 ## Features
 
@@ -91,7 +91,7 @@ Game Quest Reader is an advanced application designed to enhance the gaming expe
 
 ## Contributing
 
-Contributions to the Game Quest Reader are welcome. Please ensure that your code adheres to the existing style and includes appropriate documentation. For major changes, please open an issue first to discuss what you would like to change.
+Contributions to the Game Companion AI are welcome. Please ensure that your code adheres to the existing style and includes appropriate documentation. For major changes, please open an issue first to discuss what you would like to change.
 
 ## License
 
