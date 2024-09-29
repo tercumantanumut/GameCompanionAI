@@ -152,7 +152,7 @@ class AreaSelector:
         )
 
 class GameAnalyzer:
-    def __init__(self, ai_model):
+    def __init__(self, ai_model, temperature=0.7, top_p=0.9, top_k=40):
         self.previous_screenshot = None
         self.focus_area = None
         self.ai_model = ai_model
@@ -160,6 +160,9 @@ class GameAnalyzer:
         self.change_threshold = 0.6  # Increased threshold to reduce sensitivity
         self.consecutive_changes = 0
         self.max_consecutive_changes = 7  # Increased to require more consecutive changes
+        self.temperature = temperature
+        self.top_p = top_p
+        self.top_k = top_k
         if ai_model == "gemini":
             self.gemini_detector = GeminiDetector()
         elif ai_model == "openai":
@@ -304,10 +307,13 @@ class GameAnalyzer:
                     "model": "llava:7b",
                     "prompt": f"{self.system_prompt}\n\nConversation history:\n{json.dumps(history)}\n\nUser: {prompt}\n\nNOTE: This is a new image. Analyze it independently while considering the conversation history.",
                     "stream": False,
-                    "images": [img_str]
+                    "images": [img_str],
+                    "temperature": self.temperature,
+                    "top_p": self.top_p,
+                    "top_k": self.top_k
                 }
 
-                response = requests.post("http://localhost:11434/api/generate", json=payload)
+                response = requests.post(self.ollama_url, json=payload)
                 response.raise_for_status()
                 analysis = response.json()['response']
 
@@ -706,11 +712,18 @@ def main():
         ai_model = "gemini"
     elif ai_model == "3":
         ai_model = "ollama"
+        # Ask for Ollama-specific parameters
+        temperature = simpledialog.askfloat("Ollama Settings", "Enter temperature (0.0 to 1.0):", initialvalue=0.7, minvalue=0.0, maxvalue=1.0)
+        top_p = simpledialog.askfloat("Ollama Settings", "Enter top_p (0.0 to 1.0):", initialvalue=0.9, minvalue=0.0, maxvalue=1.0)
+        top_k = simpledialog.askinteger("Ollama Settings", "Enter top_k (1 to 100):", initialvalue=40, minvalue=1, maxvalue=100)
     else:
         print("Invalid AI model selected. Exiting.")
         return
 
-    analyzer = GameAnalyzer(ai_model)
+    if ai_model == "ollama":
+        analyzer = GameAnalyzer(ai_model, temperature, top_p, top_k)
+    else:
+        analyzer = GameAnalyzer(ai_model)
     conversation_history = ConversationHistory()
 
     global selected_area
