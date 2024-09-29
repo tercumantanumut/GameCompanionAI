@@ -11,4 +11,3 @@ keyboard==0.13.5
 requests==2.31.0
 SpeechRecognition==3.10.1
 scikit-image==0.22.0
-torch==2.1.2
