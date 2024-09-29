@@ -359,7 +359,7 @@ class GeminiDetector:
 
     def analyze_with_vision(self, image, custom_prompt=None):
         pil_image = self.tensor_to_image(image)
-        default_prompt = "Analyze this game screenshot and provide a concise, insightful interpretation, including any relevant strategic advice or lore connections. Disregard any chat logs or text conversations visible in the game screenshot. Keep your response to 3 sentences maximum. Consider the conversation history for context."
+        default_prompt = "Analyze this game screenshot and provide a concise, insightful interpretation, including any relevant strategic advice or lore connections. Disregard any chat logs or text conversations visible in the game screenshot. Keep your response to 3 sentences maximum."
         prompt = custom_prompt if custom_prompt else default_prompt
         
         try:
