@@ -657,6 +657,9 @@ def main():
     analyzer = GameAnalyzer(ai_model)
     conversation_history = ConversationHistory()
 
+    global selected_area
+    selected_area = None
+
     def on_ctrl_5():
         global selected_area
         print("Ctrl+5 pressed. Taking a screenshot for AI analysis.")
@@ -686,8 +689,6 @@ def main():
     mode_root.withdraw()  # Hide the main window
     mode = simpledialog.askstring("Mode Selection", "Choose mode:\n1. Area Selection (Tesseract)\n2. Area Selection (AI)\n3. Game Analysis\n4. Wait for Ctrl+5\n5. Player in the Loop (with TTS) - Limited functionality with Gemini, might not work as expected\n6. Voice Input (Ctrl+V)", initialvalue="1")
     mode_root.destroy()
-
-    selected_area = None
 
     if mode in ["1", "2"]:
         print("Select the area for text analysis.")
