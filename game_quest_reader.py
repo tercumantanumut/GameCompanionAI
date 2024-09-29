@@ -654,11 +654,8 @@ def main():
     selected_area = None
 
     def on_ctrl_5():
-        global selected_area
-        print("Ctrl+5 pressed. Taking a screenshot for AI analysis.")
+        print("Ctrl+5 pressed. Taking a full screenshot for AI analysis.")
         screenshot = analyzer.capture_full_screen()
-        if selected_area:
-            screenshot = screenshot.crop(selected_area)
         analysis = analyzer.analyze_with_vision(screenshot)
         print(f"AI Analysis: {analysis}")
         speak_text(analysis)
