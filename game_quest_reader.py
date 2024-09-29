@@ -24,6 +24,8 @@ from skimage.metrics import structural_similarity as ssim
 import speech_recognition as sr
 import io
 import base64
+import win32gui
+import win32com.client
 
 class AreaSelector:
     def __init__(self, master):
@@ -655,8 +657,20 @@ def main():
         area_root = tk.Tk()
         selector = AreaSelector(area_root)
         selector.start()
+
+        # Bring the AreaSelector window to the foreground
+        def bring_to_foreground():
+            try:
+                shell = win32com.client.Dispatch("WScript.Shell")
+                shell.SendKeys('%')
+                win32gui.SetForegroundWindow(area_root.winfo_id())
+            except Exception as e:
+                print(f"Error bringing window to foreground: {e}")
+
+        area_root.after(100, bring_to_foreground)  # Schedule the function to run after a short delay
         area_root.mainloop()
 
+        global selected_area
         selected_area = selector.get_coordinates()
         area_root.destroy()
 
