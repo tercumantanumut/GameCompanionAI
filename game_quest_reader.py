@@ -85,12 +85,13 @@ class AreaSelector:
     def on_button_press(self, event):
         self.start_x = self.canvas.canvasx(event.x)
         self.start_y = self.canvas.canvasy(event.y)
-        self.rect = self.canvas.create_rectangle(self.start_x, self.start_y, self.start_x, self.start_y, outline='red')
+        self.rect = self.canvas.create_rectangle(self.start_x, self.start_y, self.start_x, self.start_y, outline='#00FF00', width=3)
 
     def on_move_press(self, event):
         self.cur_x = self.canvas.canvasx(event.x)
         self.cur_y = self.canvas.canvasy(event.y)
         self.canvas.coords(self.rect, self.start_x, self.start_y, self.cur_x, self.cur_y)
+        self.canvas.itemconfig(self.rect, outline='#00FF00', width=3)
 
     def on_button_release(self, event):
         self.master.quit()
