@@ -785,7 +785,7 @@ def main():
         screenshot = analyzer.capture_full_screen()
         analysis = analyzer.analyze_with_vision(screenshot)
         print(f"AI Analysis: {analysis}")
-        speak_text(analysis)
+        speak_text(analysis)  # This line is already correct, no change needed
 
     def on_ctrl_v():
         print("Ctrl+V pressed. Listening for voice input...")
@@ -855,7 +855,7 @@ def main():
             analysis = analyzer.analyze_with_vision(cropped_screenshot)
         
         print(f"AI Analysis of selected area: {analysis}")
-        speak_text(analysis)
+        speak_text(analysis)  # This line is already correct, no change needed
 
     keyboard.add_hotkey('ctrl+5', on_ctrl_5)
     keyboard.add_hotkey('ctrl+v', on_ctrl_v)
@@ -887,7 +887,7 @@ def main():
                 # Use AI for text detection and analysis
                 analysis = analyzer.analyze_with_vision(Image.fromarray(cv2.cvtColor(screen, cv2.COLOR_BGR2RGB)))
                 print(f"AI Vision analysis: {analysis}")
-                speak_text(analysis)
+                speak_text(analysis)  # This line is already correct, no change needed
 
                 # Wait for a short time before the next capture
                 time.sleep(5)
