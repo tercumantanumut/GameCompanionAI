@@ -1,5 +1,3 @@
-import cv2
-import numpy as np
 import pyautogui
 import pytesseract
 from PIL import Image, ImageTk
@@ -10,24 +8,17 @@ import openai
 import google.generativeai as genai
 from dotenv import load_dotenv
 import requests
-import json
 import tkinter as tk
-from tkinter import messagebox, simpledialog, Text, Button, Scrollbar
+from tkinter import simpledialog, Text, Button, Scrollbar
 import ctypes
 from io import BytesIO
 from base64 import b64encode
 import keyboard
-import json
-import torch
 from collections import deque
-from skimage.metrics import structural_similarity as ssim
 import speech_recognition as sr
-import io
-import base64
 import win32gui
-import win32com.client
 import win32con
-import logging as slog
+import sys
 
 # Mock GPU classes
 class GpuInfo:
@@ -556,7 +547,7 @@ def set_tesseract_path():
         else:
             print("Invalid path. Exiting.")
     
-    exit()
+    sys.exit(1)
 
 # Set the path to the Tesseract executable
 pytesseract.pytesseract.tesseract_cmd = set_tesseract_path()
@@ -568,10 +559,10 @@ def capture_screen_area(area):
 def extract_text(image):
     try:
         return pytesseract.image_to_string(image)
-    except pytesseract.TesseractNotFoundError:
-        print("Error: Tesseract is not installed or the path is incorrect.")
-        print("Please install Tesseract OCR and set the correct path.")
-        exit()
+    except Exception as e:
+        print(f"Error: {e}")
+        print("Please ensure Tesseract OCR is installed and the path is correct.")
+        return None
 
 def speak_text(text):
     engine = pyttsx3.init()
@@ -626,9 +617,12 @@ def analyze_text_with_ai(text, ai_model, conversation_history):
             conversation_history.add("user", f"Analyze: {text}")
             conversation_history.add("assistant", analysis)
             return analysis
+        except openai.APIError as e:
+            print(f"OpenAI API error: {e}")
+            return "Unable to analyze text due to an API error."
         except Exception as e:
             print(f"Error during OpenAI analysis: {str(e)}")
-            return "Unable to analyze text due to an error."
+            return "Unable to analyze text due to an unexpected error."
     elif ai_model == "gemini":
         load_dotenv()
         api_key = os.getenv('GOOGLE_API_KEY')
