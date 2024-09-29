@@ -804,7 +804,7 @@ def main():
                 player_response = full_analysis
                 print(f"AI Analysis: {player_response}")
         
-            # Don't speak the response
+            speak_text(player_response)  # Add this line to speak the response
         else:
             print("No voice input detected or recognized.")
 
