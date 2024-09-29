@@ -19,6 +19,12 @@ import speech_recognition as sr
 import win32gui
 import win32con
 import sys
+import cv2
+import numpy as np
+from skimage.metrics import structural_similarity as ssim
+import torch
+import json
+import base64
 
 # Mock GPU classes
 class GpuInfo:
@@ -383,69 +389,7 @@ class ConversationHistory:
     def clear(self):
         self.history.clear()
 
-class MemoryEstimate:
-    def __init__(self):
-        self.Layers = 0
-        self.Graph = 0
-        self.VRAMSize = 0
-        self.TotalSize = 0
-        self.TensorSplit = ""
-        self.GPUSizes = []
-        self.inferenceLibrary = ""
-        self.layersRequested = 0
-        self.layersModel = 0
-        self.availableList = []
-        self.kv = 0
-        self.allocationsList = []
-        self.memoryWeights = 0
-        self.memoryLayerOutput = 0
-        self.graphFullOffload = 0
-        self.graphPartialOffload = 0
-
-    def log(self):
-        overhead = envconfig.GpuOverhead()
-        slog.Info(
-            "offload to " + self.inferenceLibrary,
-            slog.Group(
-                "layers",
-                "requested", self.layersRequested,
-                "model", self.layersModel,
-                "offload", self.Layers,
-                "split", self.TensorSplit,
-            ),
-            slog.Group(
-                "memory",
-                "available", self.availableList,
-                "gpu_overhead", format.HumanBytes2(overhead),
-                slog.Group(
-                    "required",
-                    "full", format.HumanBytes2(self.TotalSize),
-                    "partial", format.HumanBytes2(self.VRAMSize),
-                    "kv", format.HumanBytes2(self.kv),
-                    "allocations", self.allocationsList,
-                ),
-                slog.Group(
-                    "weights",
-                    "total", format.HumanBytes2(self.memoryWeights),
-                    "repeating", format.HumanBytes2(self.memoryWeights - self.memoryLayerOutput),
-                    "nonrepeating", format.HumanBytes2(self.memoryLayerOutput),
-                ),
-                slog.Group(
-                    "graph",
-                    "full", format.HumanBytes2(self.graphFullOffload),
-                    "partial", format.HumanBytes2(self.graphPartialOffload),
-                ),
-            ),
-        )
-
-def PredictServerFit(allGpus, ggml, adapters, projectors, opts):
-    return True, 8 * 1024 * 1024 * 1024  # Always return True and 8GB as an example
-
-def EstimateGPULayers(gpus, ggml, projectors, opts):
-    estimate = MemoryEstimate()
-    estimate.Layers = 32  # Example value
-    estimate.VRAMSize = 8 * 1024 * 1024 * 1024  # 8GB as an example
-    return estimate
+# Memory estimation and GPU-related functions removed
 
 class GeminiDetector:
     def __init__(self):
@@ -482,7 +426,7 @@ class GeminiDetector:
             formatted_messages.append({"role": "user", "parts": [{"text": prompt}]})
             
             # Convert PIL Image to bytes
-            img_byte_arr = io.BytesIO()
+            img_byte_arr = BytesIO()
             pil_image.save(img_byte_arr, format='PNG')
             img_byte_arr = img_byte_arr.getvalue()
             
@@ -661,16 +605,6 @@ def analyze_text_with_ai(text, ai_model, conversation_history):
             
             formatted_history = "\n".join([f"{item['role']}: {item['content']}" for item in history])
             
-            # Estimate GPU layers and memory
-            allGpus = GpuInfoList()  # You'll need to implement this based on your GPU detection logic
-            ggml = GGML()  # You'll need to implement this based on your GGML implementation
-            opts = api.Options(NumGPU=-1, NumCtx=2048)  # Adjust these values as needed
-            
-            fit, estimatedVRAM = PredictServerFit(allGpus, ggml, [], [], opts)
-            
-            if not fit:
-                print(f"Warning: Model may not fit in GPU memory. Estimated VRAM required: {estimatedVRAM}")
-            
             payload = {
                 "model": "llama2",
                 "prompt": f"Recent conversation:\n{formatted_history}\n\nUser: {prompt}",
@@ -683,10 +617,6 @@ def analyze_text_with_ai(text, ai_model, conversation_history):
 
             conversation_history.add("user", "New image analysis request")
             conversation_history.add("assistant", analysis)
-            
-            # Log memory estimate
-            estimate = EstimateGPULayers(allGpus.ByLibrary()[0], ggml, [], opts)
-            estimate.log()
             
             return analysis
         except Exception as e:
