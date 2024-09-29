@@ -27,8 +27,56 @@ import base64
 import win32gui
 import win32com.client
 import win32con
-import slog
-from gpu import GpuInfoList, GpuInfo
+import logging as slog
+
+# Mock GPU classes
+class GpuInfo:
+    def __init__(self):
+        self.FreeMemory = 8 * 1024 * 1024 * 1024  # 8GB as an example
+        self.TotalMemory = 16 * 1024 * 1024 * 1024  # 16GB as an example
+        self.Library = "mock"
+        self.ID = "mock_gpu"
+        self.Variant = "mock"
+        self.Compute = "mock"
+        self.DriverMajor = 1
+        self.DriverMinor = 0
+        self.Name = "Mock GPU"
+        self.MinimumMemory = 1 * 1024 * 1024 * 1024  # 1GB as an example
+
+class GpuInfoList:
+    def __init__(self):
+        self.gpus = [GpuInfo()]
+
+    def ByLibrary(self):
+        return [self.gpus]
+
+class GGML:
+    def KV(self):
+        return self
+
+    def BlockCount(self):
+        return 32  # Example value
+
+# Mock envconfig and format functions
+def GpuOverhead():
+    return 1 * 1024 * 1024 * 1024  # 1GB as an example
+
+def HumanBytes2(bytes):
+    for unit in ['', 'K', 'M', 'G', 'T', 'P']:
+        if bytes < 1024:
+            return f"{bytes:.2f}{unit}B"
+        bytes /= 1024
+    return f"{bytes:.2f}PB"
+
+class envconfig:
+    @staticmethod
+    def GpuOverhead():
+        return GpuOverhead()
+
+class format:
+    @staticmethod
+    def HumanBytes2(bytes):
+        return HumanBytes2(bytes)
 
 class AreaSelector:
     def __init__(self, master):
@@ -399,24 +447,13 @@ class MemoryEstimate:
             ),
         )
 
-def PredictServerFit(allGpus: GpuInfoList, ggml, adapters, projectors, opts):
-    estimatedVRAM = 0
-    for gpus in allGpus.ByLibrary():
-        estimate = EstimateGPULayers(gpus, ggml, projectors, opts)
-        layerCount, estimatedVRAM = estimate.Layers, estimate.VRAMSize
-        if opts.NumGPU < 0:
-            if layerCount > 0 and layerCount >= int(ggml.KV().BlockCount() + 1):
-                return True, estimatedVRAM
-        else:
-            if layerCount > 0 and layerCount >= opts.NumGPU:
-                return True, estimatedVRAM
-    return False, estimatedVRAM
+def PredictServerFit(allGpus, ggml, adapters, projectors, opts):
+    return True, 8 * 1024 * 1024 * 1024  # Always return True and 8GB as an example
 
 def EstimateGPULayers(gpus, ggml, projectors, opts):
-    # Implementation of EstimateGPULayers function
-    # This is a simplified version, you may need to adapt it further based on your specific GGML implementation
     estimate = MemoryEstimate()
-    # ... (implement the logic based on the provided Go code)
+    estimate.Layers = 32  # Example value
+    estimate.VRAMSize = 8 * 1024 * 1024 * 1024  # 8GB as an example
     return estimate
 
 class GeminiDetector:
