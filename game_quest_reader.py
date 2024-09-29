@@ -823,16 +823,38 @@ def main():
         area_root.destroy()
 
         print(f"Selected area: {selected_area}")
-        screenshot = analyzer.capture_full_screen()
-        cropped_screenshot = screenshot.crop(selected_area)
+        full_screenshot = analyzer.capture_full_screen()
         
         if analyzer.ai_model == "ollama":
-            # For Ollama, we need to send the full screenshot but with instructions to focus on the selected area
-            full_screenshot = analyzer.capture_full_screen()
+            # For Ollama, we'll use a different approach
             x1, y1, x2, y2 = selected_area
-            custom_prompt = f"Focus on the area of the image with coordinates: ({x1}, {y1}) to ({x2}, {y2}). Analyze this part of the screenshot and give a funny, personal take on what's happening in that specific area. Keep it short, sweet, and hilarious."
-            analysis = analyzer.analyze_with_vision(full_screenshot, custom_prompt)
+            cropped_screenshot = full_screenshot.crop(selected_area)
+            
+            # Save the cropped screenshot for debugging
+            cropped_screenshot.save("debug_cropped_screenshot.png")
+            
+            # Convert the cropped screenshot to base64
+            buffered = BytesIO()
+            cropped_screenshot.save(buffered, format="PNG")
+            img_str = b64encode(buffered.getvalue()).decode('utf-8')
+            
+            custom_prompt = f"Analyze this cropped screenshot. Focus on describing what you see in detail. Ignore any previous instructions about coordinates."
+            
+            payload = {
+                "model": "llava:7b",
+                "prompt": custom_prompt,
+                "stream": False,
+                "images": [img_str]
+            }
+            
+            try:
+                response = requests.post("http://localhost:11434/api/generate", json=payload)
+                response.raise_for_status()
+                analysis = response.json()['response']
+            except Exception as e:
+                analysis = f"Error during Ollama analysis: {str(e)}"
         else:
+            cropped_screenshot = full_screenshot.crop(selected_area)
             analysis = analyzer.analyze_with_vision(cropped_screenshot)
         
         print(f"AI Analysis of selected area: {analysis}")
