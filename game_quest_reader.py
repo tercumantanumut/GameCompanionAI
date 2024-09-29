@@ -659,17 +659,13 @@ def main():
 
     def on_ctrl_5():
         global selected_area
-        print("Ctrl+5 pressed. Select the area for Game Analysis.")
-        root = tk.Tk()
-        selector = AreaSelector(root)
-        selector.start()
-        root.mainloop()
-
-        selected_area = selector.get_coordinates()
-        root.destroy()
-
-        print(f"Selected area: {selected_area}")
-        start_game_analysis(analyzer, selected_area)
+        print("Ctrl+5 pressed. Taking a screenshot for AI analysis.")
+        screenshot = analyzer.capture_full_screen()
+        if selected_area:
+            screenshot = screenshot.crop(selected_area)
+        analysis = analyzer.analyze_with_vision(screenshot)
+        print(f"AI Analysis: {analysis}")
+        speak_text(analysis)
 
     def on_ctrl_v():
         print("Ctrl+V pressed. Listening for voice input...")
@@ -735,10 +731,7 @@ def main():
     elif mode == "4":
         print("Waiting for Ctrl+5 to be pressed. Press Ctrl+C to exit.")
         try:
-            while True:
-                if selected_area:
-                    start_game_analysis(analyzer, selected_area)
-                time.sleep(1)
+            keyboard.wait()  # This will keep the script running
         except KeyboardInterrupt:
             print("\nGame Quest Reader stopped.")
 
