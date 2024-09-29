@@ -289,7 +289,7 @@ class GameAnalyzer:
                 genai.configure(api_key=api_key, transport='rest')
                 model = genai.GenerativeModel('gemini-1.5-pro-latest')
                 history = conversation_history.get_formatted_history()
-                prompt = f"You are an advanced AI game companion. Consider our conversation history. Analyze the following in-game text and provide a concise, insightful interpretation, including any relevant strategic advice or lore connections: {text}"
+                prompt = f"You are an advanced AI game companion. Never start with introductury and unnecessary information like 'This screensoht shows etc.' Analyze the following in-game text and provide a concise, insightful interpretation, including any relevant strategic advice or lore connections: {text}"
                 response = model.generate_content([*history, {"role": "user", "content": prompt}])
                 analysis = response.text
                 conversation_history.add("user", f"Analyze: {text}")
