@@ -125,7 +125,7 @@ To set up Game Companion AI, follow the steps below:
 5. **Run the Application**:
     Once everything is set up, you can start the application using:
     ```bash
-    python main.py
+    python game_quest_reader.py
     ```
 
 For more detailed instructions, troubleshooting, or usage guidelines, please refer to the [documentation](docs/game_quest_reader.md).
