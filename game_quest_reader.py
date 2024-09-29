@@ -216,7 +216,7 @@ class GameAnalyzer:
                 print(f"Error during OpenAI Vision analysis: {str(e)}")
                 return "Whoops! My AI brain just did a backflip. Give me a sec to recover!"
         elif self.ai_model == "gemini":
-            return self.gemini_detector.analyze_with_vision(self.tensor_to_image(image), custom_prompt, self.conversation_history)
+            return self.gemini_detector.analyze_with_vision(self.tensor_to_image(image), custom_prompt)
         elif self.ai_model == "ollama":
             try:
                 # Convert the image to base64
@@ -321,6 +321,7 @@ class GeminiDetector:
             genai.configure(api_key=self.api_key, transport='rest')
         self.model = genai.GenerativeModel('gemini-1.5-pro-latest')
         self.ai_model = "gemini"
+        self.conversation_history = ConversationHistory()
 
     def tensor_to_image(self, image):
         if isinstance(image, torch.Tensor):
@@ -332,13 +333,13 @@ class GeminiDetector:
         else:
             raise ValueError("Input must be a PyTorch tensor or a PIL Image")
 
-    def analyze_with_vision(self, image, custom_prompt=None, conversation_history=None):
+    def analyze_with_vision(self, image, custom_prompt=None):
         pil_image = self.tensor_to_image(image)
         default_prompt = "Analyze this game screenshot and provide a concise, insightful interpretation, including any relevant strategic advice or lore connections. Disregard any chat logs or text conversations visible in the game screenshot. Keep your response to 3 sentences maximum. Consider the conversation history for context."
         prompt = custom_prompt if custom_prompt else default_prompt
         
         try:
-            history = conversation_history.get_formatted_history() if conversation_history else []
+            history = self.conversation_history.get_formatted_history()
             formatted_messages = []
             for item in history:
                 role = "user" if item["role"] == "user" else "model"
@@ -362,9 +363,8 @@ class GeminiDetector:
             
             response = self.model.generate_content(formatted_messages)
             analysis = response.text
-            if conversation_history:
-                conversation_history.add("user", prompt)
-                conversation_history.add("model", analysis)
+            self.conversation_history.add("user", prompt)
+            self.conversation_history.add("model", analysis)
             return f"Based on the conversation history and the current screenshot: {analysis}"
         except Exception as e:
             print(f"Error during Gemini Vision analysis: {str(e)}")
@@ -374,7 +374,7 @@ class GeminiDetector:
         return pyautogui.screenshot()
 
     def detect_changes(self, current_screenshot):
-        if self.previous_screenshot is None:
+        if not hasattr(self, 'previous_screenshot'):
             self.previous_screenshot = current_screenshot
             return False, None
 
@@ -395,38 +395,6 @@ class GeminiDetector:
             return True, (x, y, x+w, y+h)
         
         return False, None
-
-    def analyze_with_vision(self, image, custom_prompt=None):
-        pil_image = self.tensor_to_image(image)
-        default_prompt = "Analyze this game screenshot and provide a concise, insightful interpretation, including any relevant strategic advice or lore connections. Keep your response to 3 sentences maximum."
-        prompt = custom_prompt if custom_prompt else default_prompt
-        
-        try:
-            history = self.conversation_history.get_formatted_history()
-            formatted_messages = [{"role": item["role"], "parts": [{"text": item["content"]}]} for item in history]
-            
-            # Convert PIL Image to bytes
-            img_byte_arr = io.BytesIO()
-            pil_image.save(img_byte_arr, format='PNG')
-            img_byte_arr = img_byte_arr.getvalue()
-            
-            # Add the new message with text and image
-            formatted_messages.append({
-                "role": "user",
-                "parts": [
-                    {"text": prompt},
-                    {"inline_data": {"mime_type": "image/png", "data": base64.b64encode(img_byte_arr).decode('utf-8')}}
-                ]
-            })
-            
-            response = self.model.generate_content(formatted_messages)
-            analysis = response.text
-            self.conversation_history.add("user", prompt)
-            self.conversation_history.add("assistant", analysis)
-            return analysis
-        except Exception as e:
-            print(f"Error during Gemini Vision analysis: {str(e)}")
-            return "Unable to analyze image due to an error."
 
 def set_tesseract_path():
     default_path = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
