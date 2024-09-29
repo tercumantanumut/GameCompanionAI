@@ -825,7 +825,16 @@ def main():
         print(f"Selected area: {selected_area}")
         screenshot = analyzer.capture_full_screen()
         cropped_screenshot = screenshot.crop(selected_area)
-        analysis = analyzer.analyze_with_vision(cropped_screenshot)
+        
+        if analyzer.ai_model == "ollama":
+            # For Ollama, we need to send the full screenshot but with instructions to focus on the selected area
+            full_screenshot = analyzer.capture_full_screen()
+            x1, y1, x2, y2 = selected_area
+            custom_prompt = f"Focus on the area of the image with coordinates: ({x1}, {y1}) to ({x2}, {y2}). Analyze this part of the screenshot and give a funny, personal take on what's happening in that specific area. Keep it short, sweet, and hilarious."
+            analysis = analyzer.analyze_with_vision(full_screenshot, custom_prompt)
+        else:
+            analysis = analyzer.analyze_with_vision(cropped_screenshot)
+        
         print(f"AI Analysis of selected area: {analysis}")
         speak_text(analysis)
 
