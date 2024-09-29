@@ -650,8 +650,26 @@ def main():
         else:
             print("No voice input detected or recognized.")
 
+    def on_ctrl_6():
+        print("Ctrl+6 pressed. Select an area for analysis.")
+        area_root = tk.Tk()
+        selector = AreaSelector(area_root)
+        selector.start()
+        area_root.mainloop()
+
+        selected_area = selector.get_coordinates()
+        area_root.destroy()
+
+        print(f"Selected area: {selected_area}")
+        screenshot = analyzer.capture_full_screen()
+        cropped_screenshot = screenshot.crop(selected_area)
+        analysis = analyzer.analyze_with_vision(cropped_screenshot)
+        print(f"AI Analysis of selected area: {analysis}")
+        speak_text(analysis)
+
     keyboard.add_hotkey('ctrl+5', on_ctrl_5)
     keyboard.add_hotkey('ctrl+v', on_ctrl_v)
+    keyboard.add_hotkey('ctrl+6', on_ctrl_6)
 
     mode_root = tk.Tk()
     mode_root.withdraw()  # Hide the main window
