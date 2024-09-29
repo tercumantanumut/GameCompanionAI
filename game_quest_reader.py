@@ -796,13 +796,8 @@ def main():
             full_analysis = analyzer.analyze_with_vision(screenshot, combined_prompt)
         
             # Extract the part after "Here's how I'd respond to the player:"
-            response_start = full_analysis.find("Here's how I'd respond to the player:")
-            if response_start != -1:
-                player_response = full_analysis[response_start + len("Here's how I'd respond to the player:"):].strip()
-                print(f"AI Response: {player_response}")
-            else:
-                player_response = full_analysis
-                print(f"AI Analysis: {player_response}")
+            player_response = full_analysis.strip()
+            print(player_response)
         
             speak_text(player_response)  # Add this line to speak the response
         else:
@@ -854,7 +849,7 @@ def main():
             cropped_screenshot = full_screenshot.crop(selected_area)
             analysis = analyzer.analyze_with_vision(cropped_screenshot)
         
-        print(f"AI Analysis of selected area: {analysis}")
+        print(analysis)
         speak_text(analysis)  # This line is already correct, no change needed
 
     keyboard.add_hotkey('ctrl+5', on_ctrl_5)
@@ -886,7 +881,7 @@ def main():
 
                 # Use AI for text detection and analysis
                 analysis = analyzer.analyze_with_vision(Image.fromarray(cv2.cvtColor(screen, cv2.COLOR_BGR2RGB)))
-                print(f"AI Vision analysis: {analysis}")
+                print(analysis)
                 speak_text(analysis)  # This line is already correct, no change needed
 
                 # Wait for a short time before the next capture
