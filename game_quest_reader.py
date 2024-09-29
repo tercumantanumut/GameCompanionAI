@@ -229,7 +229,7 @@ class GameAnalyzer:
                 prompt = custom_prompt if custom_prompt else default_prompt
 
                 payload = {
-                    "model": "llava",
+                    "model": "llava:7b",
                     "prompt": f"{self.system_prompt}\n\nConversation history:\n{json.dumps(history)}\n\nUser: {prompt}",
                     "stream": False,
                     "images": [img_str]
