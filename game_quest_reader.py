@@ -250,12 +250,12 @@ class GameAnalyzer:
                 img_str = b64encode(buffered.getvalue()).decode('utf-8')
 
                 history = self.conversation_history.get_formatted_history()
-                default_prompt = "You're a witty, sarcastic game companion. Analyze this screenshot and give a funny, personal take on what's happening. Keep it short, sweet, and hilarious. No AI jargon allowed!"
+                default_prompt = "You're a witty, sarcastic game companion. Analyze this new screenshot and give a funny, personal take on what's happening. Keep it short, sweet, and hilarious. No AI jargon allowed! Consider the conversation history, but focus on the new image."
                 prompt = custom_prompt if custom_prompt else default_prompt
 
                 payload = {
                     "model": "llava:7b",
-                    "prompt": f"{self.system_prompt}\n\nConversation history:\n{json.dumps(history)}\n\nUser: {prompt}",
+                    "prompt": f"{self.system_prompt}\n\nConversation history:\n{json.dumps(history)}\n\nUser: {prompt}\n\nNOTE: This is a new image. Analyze it independently while considering the conversation history.",
                     "stream": False,
                     "images": [img_str]
                 }
