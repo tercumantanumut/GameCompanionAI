@@ -26,6 +26,7 @@ import io
 import base64
 import win32gui
 import win32com.client
+import win32con
 
 class AreaSelector:
     def __init__(self, master):
@@ -59,6 +60,27 @@ class AreaSelector:
         self.canvas.bind("<ButtonPress-1>", self.on_button_press)
         self.canvas.bind("<B1-Motion>", self.on_move_press)
         self.canvas.bind("<ButtonRelease-1>", self.on_button_release)
+
+        # Bring the window to the foreground
+        self.bring_to_foreground()
+
+    def bring_to_foreground(self):
+        self.master.lift()
+        self.master.attributes('-topmost', True)
+        self.master.after_idle(self.master.attributes, '-topmost', False)
+
+        # Force focus
+        self.master.focus_force()
+
+        # Use Windows API to bring window to foreground
+        try:
+            hwnd = self.master.winfo_id()
+            win32gui.SetForegroundWindow(hwnd)
+            win32gui.SetActiveWindow(hwnd)
+            win32gui.BringWindowToTop(hwnd)
+            win32gui.ShowWindow(hwnd, win32con.SW_SHOW)
+        except Exception as e:
+            print(f"Error bringing window to foreground: {e}")
 
     def on_button_press(self, event):
         self.start_x = self.canvas.canvasx(event.x)
@@ -657,17 +679,6 @@ def main():
         area_root = tk.Tk()
         selector = AreaSelector(area_root)
         selector.start()
-
-        # Bring the AreaSelector window to the foreground
-        def bring_to_foreground():
-            try:
-                shell = win32com.client.Dispatch("WScript.Shell")
-                shell.SendKeys('%')
-                win32gui.SetForegroundWindow(area_root.winfo_id())
-            except Exception as e:
-                print(f"Error bringing window to foreground: {e}")
-
-        area_root.after(100, bring_to_foreground)  # Schedule the function to run after a short delay
         area_root.mainloop()
 
         global selected_area
