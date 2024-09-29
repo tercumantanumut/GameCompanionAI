@@ -274,9 +274,11 @@ class GameAnalyzer:
                 response = self.openai_client.chat.completions.create(
                     model="gpt-4-vision-preview",
                     messages=messages,
-                    max_tokens=100,
+                    max_tokens=300,  # Increased from 100 to 300
                 )
                 analysis = response.choices[0].message.content
+                if len(analysis) == 300:  # If the response reaches the max token limit
+                    analysis += "..."  # Append ellipsis to indicate truncation
                 self.conversation_history.add("user", prompt)
                 self.conversation_history.add("assistant", analysis)
                 
