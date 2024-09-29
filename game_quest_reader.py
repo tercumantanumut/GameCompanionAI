@@ -699,10 +699,10 @@ def main():
 
     mode_root = tk.Tk()
     mode_root.withdraw()  # Hide the main window
-    mode = simpledialog.askstring("Mode Selection", "Choose mode:\n1. Area Selection (Tesseract)\n2. Area Selection (AI)\n3. Game Analysis\n4. Wait for Ctrl+5\n5. Player in the Loop (with TTS) - Limited functionality with Gemini, might not work as expected\n6. Voice Input (Ctrl+V)", initialvalue="1")
+    mode = simpledialog.askstring("Mode Selection", "Choose mode:\n1. Area Selection (AI)\n2. Game Analysis", initialvalue="1")
     mode_root.destroy()
 
-    if mode in ["1", "2"]:
+    if mode == "1":
         print("Select the area for text analysis.")
         area_root = tk.Tk()
         selector = AreaSelector(area_root)
@@ -720,42 +720,37 @@ def main():
                 # Capture the selected screen area
                 screen = capture_screen_area(selected_area)
 
-                if mode == "1":
-                    # Use Tesseract for local text analysis
-                    text = extract_text(screen)
-                    if text.strip():
-                        print(f"Detected text: {text}")
-                        print(f"Tesseract analysis: {text}")
-                        speak_text(text)
-                else:
-                    # Use AI for text detection and analysis
-                    analysis = analyzer.analyze_with_vision(Image.fromarray(cv2.cvtColor(screen, cv2.COLOR_BGR2RGB)))
-                    print(f"AI Vision analysis: {analysis}")
-                    speak_text(analysis)
+                # Use AI for text detection and analysis
+                analysis = analyzer.analyze_with_vision(Image.fromarray(cv2.cvtColor(screen, cv2.COLOR_BGR2RGB)))
+                print(f"AI Vision analysis: {analysis}")
+                speak_text(analysis)
 
                 # Wait for a short time before the next capture
                 time.sleep(5)
         except KeyboardInterrupt:
             print("\nGame Quest Reader stopped.")
 
-    elif mode == "3":
+    elif mode == "2":
         start_game_analysis(analyzer)
-
-    elif mode == "4":
-        print("Waiting for Ctrl+5 to be pressed. Press Ctrl+C to exit.")
-        try:
-            keyboard.wait()  # This will keep the script running
-        except KeyboardInterrupt:
-            print("\nGame Quest Reader stopped.")
-
-    elif mode == "5":
-        if ai_model == "gemini":
-            print("Warning: Player in the Loop mode may have limited functionality with Gemini AI model and might not work as expected.")
-        print("Starting Player in the Loop mode with automatic TTS...")
-        player_in_the_loop(analyzer)
 
     else:
         print("Invalid mode selected. Exiting.")
+
+    # Hidden modes (functionality remains intact)
+    keyboard.add_hotkey('ctrl+5', on_ctrl_5)
+    keyboard.add_hotkey('ctrl+v', on_ctrl_v)
+    keyboard.add_hotkey('ctrl+6', on_ctrl_6)
+
+    print("Additional hidden modes:")
+    print("- Press Ctrl+5 for screenshot analysis")
+    print("- Press Ctrl+V for voice input analysis")
+    print("- Press Ctrl+6 to select a new area for analysis")
+    print("Press Ctrl+C to exit.")
+
+    try:
+        keyboard.wait()  # This will keep the script running
+    except KeyboardInterrupt:
+        print("\nGame Quest Reader stopped.")
 
 if __name__ == "__main__":
     main()
