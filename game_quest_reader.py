@@ -256,13 +256,21 @@ class GameAnalyzer:
                 img_str = b64encode(buffered.getvalue()).decode('utf-8')
 
                 history = self.conversation_history.get_formatted_history()
-                default_prompt = "You're a witty, sarcastic game companion. Analyze this screenshot and give a funny, personal take on what's happening. Keep it short, sweet, and hilarious. No AI jargon allowed!"
+                default_prompt = """
+                You're a witty, sarcastic game companion. Analyze this screenshot and give a funny, personal take on what's happening. Keep it short, sweet, and hilarious. No AI jargon allowed!
+                Provide your response in the following JSON structure:
+                {
+                    "analysis": "Your funny analysis here",
+                    "game_insight": "A brief, useful game insight",
+                    "player_advice": "A short, sarcastic piece of advice for the player"
+                }
+                """
                 prompt = custom_prompt if custom_prompt else default_prompt
 
                 # Check if the prompt is a general question
-                if not custom_prompt or "screenshot" in custom_prompt.lower() or "image" in custom_prompt.lower():
+                if not custom_prompt or "screenshot" in prompt.lower() or "image" in prompt.lower():
                     messages = [
-                        {"role": "system", "content": "You are a hilarious, snarky AI game companion. Your job is to make the player laugh while giving actually useful game insights. Be brief, be funny, be helpful."},
+                        {"role": "system", "content": "You are a hilarious, snarky AI game companion. Your job is to make the player laugh while giving actually useful game insights. Be brief, be funny, be helpful. Always respond in the requested JSON format."},
                         *history,
                         {
                             "role": "user",
@@ -275,7 +283,7 @@ class GameAnalyzer:
                 else:
                     # For general questions, don't include the image
                     messages = [
-                        {"role": "system", "content": "You are a witty and sarcastic AI companion. Answer general questions without referencing any game or screenshot."},
+                        {"role": "system", "content": "You are a witty and sarcastic AI companion. Answer general questions without referencing any game or screenshot. Always respond in the requested JSON format."},
                         *history,
                         {"role": "user", "content": prompt}
                     ]
@@ -284,10 +292,15 @@ class GameAnalyzer:
                     model="gpt-4-vision-preview",
                     messages=messages,
                     max_tokens=300,
+                    response_format={ "type": "json_object" }
                 )
-                analysis = response.choices[0].message.content
-                if len(analysis) == 300:
-                    analysis += "..."
+                analysis_json = json.loads(response.choices[0].message.content)
+                
+                # Combine the JSON fields into a single string
+                analysis = f"{analysis_json['analysis']} {analysis_json['game_insight']} {analysis_json['player_advice']}"
+                
+                if len(analysis) >= 300:
+                    analysis = analysis[:297] + "..."
                 self.conversation_history.add("user", prompt)
                 self.conversation_history.add("assistant", analysis)
                 
@@ -310,14 +323,22 @@ class GameAnalyzer:
                 img_str = b64encode(buffered.getvalue()).decode('utf-8')
 
                 history = self.conversation_history.get_formatted_history()
-                default_prompt = "You're a witty, sarcastic game companion. Analyze this new screenshot and give a funny, personal take on what's happening. Keep it short, sweet, and hilarious. No AI jargon allowed! Consider the conversation history, but focus on the new image."
+                default_prompt = """
+                You're a witty, sarcastic game companion. Analyze this new screenshot and give a funny, personal take on what's happening. Keep it short, sweet, and hilarious. No AI jargon allowed! Consider the conversation history, but focus on the new image.
+                Provide your response in the following JSON structure:
+                {
+                    "analysis": "Your funny analysis here",
+                    "game_insight": "A brief, useful game insight",
+                    "player_advice": "A short, sarcastic piece of advice for the player"
+                }
+                """
                 prompt = custom_prompt if custom_prompt else default_prompt
 
                 # Check if the prompt is a general question
                 if not custom_prompt or "screenshot" in prompt.lower() or "image" in prompt.lower():
                     payload = {
                         "model": "llava:7b",
-                        "prompt": f"{self.system_prompt}\n\nConversation history:\n{json.dumps(history)}\n\nUser: {prompt}\n\nNOTE: This is a new image. Analyze it independently while considering the conversation history.",
+                        "prompt": f"{self.system_prompt}\n\nConversation history:\n{json.dumps(history)}\n\nUser: {prompt}\n\nNOTE: This is a new image. Analyze it independently while considering the conversation history. Respond in the requested JSON format.",
                         "stream": False,
                         "images": [img_str],
                         "temperature": self.temperature,
@@ -328,7 +349,7 @@ class GameAnalyzer:
                     # For general questions, don't include the image
                     payload = {
                         "model": "llama2",
-                        "prompt": f"You are a witty and sarcastic AI companion. Answer this general question without referencing any game or screenshot: {prompt}",
+                        "prompt": f"You are a witty and sarcastic AI companion. Answer this general question without referencing any game or screenshot: {prompt}\nRespond in the requested JSON format.",
                         "stream": False,
                         "temperature": self.temperature,
                         "top_p": self.top_p,
@@ -337,7 +358,10 @@ class GameAnalyzer:
 
                 response = requests.post(self.ollama_url, json=payload)
                 response.raise_for_status()
-                analysis = response.json()['response']
+                analysis_json = json.loads(response.json()['response'])
+                
+                # Combine the JSON fields into a single string
+                analysis = f"{analysis_json['analysis']} {analysis_json['game_insight']} {analysis_json['player_advice']}"
 
                 self.conversation_history.add("user", prompt)
                 self.conversation_history.add("assistant", analysis)
