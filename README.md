@@ -1,11 +1,14 @@
 # Game Companion AI
 
+[![Game Companion AI - Overview Video](https://img.youtube.com/vi/WikAtNu76K0/0.jpg)](https://youtu.be/WikAtNu76K0?si=rgWLodV5fDs5BFXt)
+
 Game Companion AI is an advanced application designed to enhance the gaming experience by providing real-time analysis and interpretation of game content using AI-powered vision and text analysis. Whether you're navigating a complex quest, analyzing game environments, or interacting with characters, Game Companion AI aims to assist players with dynamic and customizable AI tools.
 
 
 - **Press Ctrl+5 for instant full-screen analysis.**
 - **Press Ctrl+V to use voice input for questions or commands.**
 - **Press Ctrl+6 to select a custom area for one-time analysis.**
+
 
 ## Features
 
