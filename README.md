@@ -2,6 +2,11 @@
 
 Game Companion AI is an advanced application designed to enhance the gaming experience by providing real-time analysis and interpretation of game content using AI-powered vision and text analysis. Whether you're navigating a complex quest, analyzing game environments, or interacting with characters, Game Companion AI aims to assist players with dynamic and customizable AI tools.
 
+
+- **Press Ctrl+5 for instant full-screen analysis.**
+- **Press Ctrl+V to use voice input for questions or commands.**
+- **Press Ctrl+6 to select a custom area for one-time analysis.**
+
 ## Features
 
 - **Multiple Analysis Modes**:
@@ -25,9 +30,6 @@ Game Companion AI is an advanced application designed to enhance the gaming expe
 - **Customizable AI Parameters**:
     - Fine-tune responses and behavior for Ollama AI models
  
-Press Ctrl+5 for instant full-screen analysis.
-Press Ctrl+V to use voice input for questions or commands.
-Press Ctrl+6 to select a custom area for one-time analysis.
 
 ## Installation
 
