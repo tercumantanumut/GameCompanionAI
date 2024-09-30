@@ -24,6 +24,10 @@ Game Companion AI is an advanced application designed to enhance the gaming expe
     - Players can ask questions or issue commands using their voice
 - **Customizable AI Parameters**:
     - Fine-tune responses and behavior for Ollama AI models
+ 
+Press Ctrl+5 for instant full-screen analysis.
+Press Ctrl+V to use voice input for questions or commands.
+Press Ctrl+6 to select a custom area for one-time analysis.
 
 ## Installation
 
