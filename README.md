@@ -126,7 +126,7 @@ To set up Game Companion AI, follow the steps below:
     ```
 
 4. **(Optional) Install and Set Up Ollama**:
-    If you wish to use the Ollama AI model, follow the Ollama-specific installation instructions found [here]([https://ollama.com/docs/setup](https://ollama.com/download)).
+    If you wish to use the Ollama AI model, follow the Ollama-specific installation instructions found https://ollama.com/download
 
 5. **Run the Application**:
     Once everything is set up, you can start the application using:
